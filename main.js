@@ -11,6 +11,7 @@ const camera = new THREE.PerspectiveCamera(
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x142c48, 1);
 renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
 
@@ -26,36 +27,81 @@ var radiusBottom = 1;
 var height = 12;
 var radialSegments = 12;
 
-const geometry = new THREE.CylinderGeometry(
-  radiusTop,
-  radiusBottom,
-  height,
-  radialSegments
-);
+let cylinder;
 
-// create edges of cylinder
-const edges = new THREE.EdgesGeometry(geometry);
+function createCylinder() {
+  let currentRotation = { x: 0, y: 0, z: 0 };
 
-// create dashed line material
-const dashedMaterial = new THREE.LineDashedMaterial({
-  color: 0x00ff00,
-  linewidth: 1,
-  dashSize: 0.25,
-  gapSize: 0.25,
-});
+  if (cylinder) {
+    currentRotation.x = cylinder.rotation.x;
+    currentRotation.y = cylinder.rotation.y;
+    currentRotation.z = cylinder.rotation.z;
 
-// create cylinder with dashed material and edges
-const cylinder = new THREE.LineSegments(edges, dashedMaterial);
+    scene.remove(cylinder);
+  }
 
-cylinder.computeLineDistances();
+  const geometry = new THREE.CylinderGeometry(
+    radiusTop,
+    radiusBottom,
+    height,
+    radialSegments
+  );
 
-// scene.add(cylinder);
-scene.add(cylinder);
+  // create edges of cylinder
+  const edges = new THREE.EdgesGeometry(geometry);
 
-cylinder.rotation.z = Math.PI / 2;
+  // create dashed line material
+  const dashedMaterial = new THREE.LineDashedMaterial({
+    color: 0x69b4cc,
+    linewidth: 1,
+    dashSize: 0.25,
+    gapSize: 0.25,
+  });
+
+  // create cylinder with dashed material and edges
+  cylinder = new THREE.LineSegments(edges, dashedMaterial);
+
+  cylinder.computeLineDistances();
+
+  cylinder.rotation.x = currentRotation.x;
+  cylinder.rotation.y = currentRotation.y;
+  cylinder.rotation.z = currentRotation.z;
+
+  // scene.add(cylinder);
+  scene.add(cylinder);
+
+  cylinder.rotation.z = Math.PI / 2;
+}
+
+createCylinder();
 
 function animate() {
-  cylinder.rotation.x += 0.01;
+  if (cylinder) {
+    cylinder.rotation.x += 0.01;
+  }
 
   renderer.render(scene, camera);
 }
+
+// sliders
+const radiusBottomSlider = document.getElementById("radiusBottomSlider");
+const radiusTopSlider = document.getElementById("radiusTopSlider");
+const lengthSlider = document.getElementById("lengthSlider");
+
+// an event listener to change the radius of the bottom end
+radiusBottomSlider.addEventListener("input", (event) => {
+  radiusBottom = parseFloat(event.target.value);
+  createCylinder();
+});
+
+// an event listener to change the radius of the top end
+radiusTopSlider.addEventListener("input", (event) => {
+  radiusTop = parseFloat(event.target.value);
+  createCylinder();
+});
+
+// an event listener to change the length
+lengthSlider.addEventListener("input", (event) => {
+  height = event.target.value;
+  createCylinder();
+});
