@@ -1,0 +1,220 @@
+body {
+    display: flex;
+    background: #142c48;
+    margin: 0px;
+    overflow: hidden;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
+
+canvas {
+    position: absolute;
+    top: 12.5%;
+    left: 25%;
+    /* Optional box-shadow for style */
+    box-shadow: 0px 4px 8px 8px #69b4cc20;
+}
+
+.grid-overlay {
+    user-select: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image: linear-gradient(to right, #69b4cc10 1px, transparent 1px),
+        linear-gradient(to bottom, #69b4cc10 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 2;
+}
+
+#title-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: transparent;
+}
+
+.title-bar {
+    border-top: 60px solid #69b4cc80;
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    height: 0;
+    width: 50%;
+}
+
+.title {
+    position: relative;
+    top: -50px;
+    left: 0%;
+    font-size: 30px;
+    font-family: monospace;
+    font-weight: bold;
+    color: #142c4880;
+}
+
+#controls-container {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    display: flex;
+    gap: 20px;
+    justify-content: flex-start;
+    width: 100%;
+    flex-direction: row;
+    background: #69b4cc20;
+    padding: 20px;
+}
+
+.size-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    background: #69b4cc40;
+    width: 20%;
+}
+
+.control {
+    display: flex;
+    flex-direction: column;
+}
+
+.control-label {
+    padding: 20px;
+    font-style: italic;
+    font-size: 20px;
+    align-self: center;
+    color: #69b4cc80;
+    font-family: monospace;
+}
+
+.control-value-label {
+    padding-top: 10px;
+    display: flex;
+    line-break: normal;
+    width: 60px;
+    font-style: italic;
+    font-size: 12px;
+    align-self: center;
+    justify-content: center;
+    color: #69b4cc80;
+    font-family: monospace;
+}
+
+input[type=range] {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    vertical-align: middle;
+}
+
+.slider {
+    -webkit-appearance: none;
+    background: transparent;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+    padding: 10px 5px;
+}
+
+.slider::-webkit-slider-runnable-track {
+    background: #69b4cc40;
+    box-shadow: inset 1px 1px 2px 1px #142c4880;
+    width: 20px;
+}
+
+.slider::-webkit-slider-thumb {
+    align-self: center;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 40px;
+    height: 15px;
+    border-radius: 10px;
+    background: #69b4cc;
+    cursor: pointer;
+    box-shadow: 1px 1px 2px 1px #142c4880;
+    margin-left: -9px;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    filter: brightness(90%);
+    cursor: pointer;
+    box-shadow: 1px 1px 3px 2px #142c4880;
+}
+
+.end-vis-container {
+    width: 10%;
+}
+
+.bottom-end-vis-label-container {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 110px;
+    border-bottom: 30px solid #69b4cc60;
+    border-left: 0px solid transparent;
+    border-right: 20px solid transparent;
+}
+
+.top-end-vis-label-container {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 80px;
+    border-bottom: 30px solid #69b4cc60;
+    border-left: 0px solid transparent;
+    border-right: 20px solid transparent;
+}
+
+.end-vis-label {
+    position: relative;
+    top: -25px;
+    left: 20px;
+    padding: 5px;
+    color: #142c4880;
+    font-family: monospace;
+    font-size: 20px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.end-vis-content {
+    position: relative;
+    top: -23px;
+    height: calc(100% - 30px);
+    background: #69b4cc40;
+}
+
+.radar-chart {
+    margin-bottom: -30px;
+}
+
+.radar-chart text {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    fill: #333;
+}
+
+.radar-chart .ring {
+    stroke: #69b4cc40;
+    stroke-width: 2;
+    fill: none;
+}
+
+.radar-chart .axis {
+    stroke: #69b4cc40;
+    stroke-width: 2;
+}
+
+.radar-chart .data-polygon {
+    fill: #69b4cc60;
+    stroke: #244d6980;
+    stroke-width: 1;
+}

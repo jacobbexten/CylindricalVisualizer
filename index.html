@@ -1,152 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>My first three.js app</title>
-		<style>
-			body { margin: 0; }
 
-			.grid-overlay {
-				user-select: none;
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				pointer-events: none;
-				background-image: linear-gradient(to right, #69b4cc10 1px, transparent 1px),
-								linear-gradient(to bottom, #69b4cc10 1px, transparent 1px);
-				background-size: 50px 50px;
-			}
+<head>
+	<meta charset="utf-8">
+	<title>My first three.js app</title>
+	<link rel="stylesheet" href="app.css">
+</head>
 
-			#title-container {
-				display: flex;
-				flex-direction: column;
-				width: 100%;
-				align-items: center;
-				justify-content: center;
-				position: absolute;
-				top: 0;
-				left: 0;
-				background-color: transparent;
-			}
-
-			.title-bar {
-				border-top: 60px solid #244d69;
-				border-left: 40px solid transparent;
-				border-right: 40px solid transparent;
-				height: 0;
-				width: 50%;
-			}
-
-			.title {
-				position: relative;
-				top: -50px;
-				left: 0%;
-				font-size: 30px;
-				font-family: monospace;
-				font-weight: bold;
-				color: #142c48;
-			}
-
-			#controls-container {
-				position: absolute;
-				bottom: 10px;
-				left: 10px;
-				display: flex;
-				flex-direction: row;
-				background: #69b4cc50;
-				padding: 5px;
-				border-radius: 10px;
-			}
-
-			.size-controls {
-				display: flex;
-				flex-direction: row;
-				background-color: #244d69;
-				border-radius: 10px;
-				background: #244d6980;
-			}
-
-			.control {
-				display: flex;
-				flex-direction: column;
-			}
-
-			.control-label {
-				padding: 0px 20px 20px 20px;
-				font-style: italic;
-				font-size: 24px;
-				align-self: center;
-				color: #69b4cc;
-				font-family: monospace;
-			}
-
-			input[type=range] {
-				writing-mode: vertical-lr;
-				direction: rtl;
-				vertical-align: middle;
-			}
-
-			.slider {
-				-webkit-appearance: none;
-				background: transparent;
-				outline: none;
-				opacity: 0.7;
-				-webkit-transition: .2s;
-				transition: opacity .2s;
-				padding: 10px 5px;
-			}
-
-			.slider::-webkit-slider-runnable-track {
-				border-radius: 5px;
-				background: #69b4cc40;
-				box-shadow: inset 1px 1px 2px 1px #142c48;
-				padding: 5px;
-			}
-
-			.slider::-webkit-slider-thumb {
-				-webkit-appearance: none;
-				appearance: none;
-				width: 50px;
-				height: 20px;
-				border-radius: 5px;
-				background: #69b4cc;
-				cursor: pointer;
-				box-shadow: 1px 1px 2px 1px #142c48;
-			}
-
-		</style>
-	</head>
-	<body>
-		<div class="grid-overlay"></div>
-		<div id="title-container">
-			<div class="title-bar"></div>
-			<label class="title">Cylindrical Visualizer</label>
-		</div>
-		<div id="controls-container">
-			<div class="size-controls">
-				<div class="control">
-					<input id="radiusBottomSlider" type="range" min="0.1" max="1" value="0.6" step="0.1" class="slider">
-					<label class="control-label" for="radiusBottomSlider">Bottom</label>
-				</div>
-				<div class="control">
-					<input id="radiusTopSlider" type="range" min="0.1" max="1" value="0.5" step="0.1" class="slider">
-					<label class="control-label" for="radiusTopSlider">Top</label>
-				</div>
-				<div class="control">
-					<input id="lengthSlider" type="range" min="8" max="20" value="16" step="1" class="slider">
-					<label class="control-label" for="lengthSlider">Length</label>
-				</div>
+<body>
+	<div class="grid-overlay"></div>
+	<div id="title-container">
+		<div class="title-bar"></div>
+		<label class="title">Cylindrical Visualizer</label>
+	</div>
+	<div id="controls-container">
+		<div class="size-controls">
+			<div class="control">
+				<label class="control-value-label" for="radiusBottomSlider"><span id="bottomValue"></span> in.</label>
+				<input id="radiusBottomSlider" type="range" min="0.5" max="1" value="0.8" step="0.1" class="slider">
+				<label class="control-label">BOTTOM</label>
+			</div>
+			<div class="control">
+				<label class="control-value-label" for="radiusTopSlider"><span id="topValue"></span> in.</label>
+				<input id="radiusTopSlider" type="range" min="0.5" max="1" value="0.7" step="0.1" class="slider">
+				<label class="control-label">TOP</label>
+			</div>
+			<div class="control">
+				<label class="control-value-label" for="lengthSlider"><span id="lengthValue"></span> ft.</label>
+				<input id="lengthSlider" type="range" min="8" max="20" value="8" step="1" class="slider">
+				<label class="control-label">LENGTH</label>
 			</div>
 		</div>
-		<script type="importmap">
+		<div class="end-vis-container">
+			<div class="bottom-end-vis-label-container"></div>
+			<label class="end-vis-label">BOTTOM</label>
+			<div class="end-vis-content">
+				<svg viewBox="-100 -100 200 200" class="radar-chart">
+					<circle cx="0" cy="0" r="20" class="ring"></circle>
+					<circle cx="0" cy="0" r="40" class="ring"></circle>
+					<circle cx="0" cy="0" r="60" class="ring"></circle>
+					<circle cx="0" cy="0" r="80" class="ring"></circle>
+
+					<line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
+					<line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
+					<line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
+					<line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
+					<line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
+					<line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
+					<line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
+					<line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
+
+					<polygon points="0,-40 34.64,-20 51.96,0 0,50 -34.64,20 -51.96,-10" class="data-polygon"></polygon>
+
+				</svg>
+			</div>
+		</div>
+		<div class="end-vis-container">
+			<div class="top-end-vis-label-container"></div>
+			<label class="end-vis-label">TOP</label>
+			<div class="end-vis-content">
+				<svg viewBox="-100 -100 200 200" class="radar-chart">
+					<circle cx="0" cy="0" r="20" class="ring"></circle>
+					<circle cx="0" cy="0" r="40" class="ring"></circle>
+					<circle cx="0" cy="0" r="60" class="ring"></circle>
+					<circle cx="0" cy="0" r="80" class="ring"></circle>
+
+					<line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
+					<line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
+					<line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
+					<line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
+					<line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
+					<line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
+					<line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
+					<line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
+
+					<polygon points="0,-43 34.64,-20 21.6,0 0,30 -31.14,20 -21.96,-10" class="data-polygon"></polygon>
+
+				</svg>
+			</div>
+		</div>
+	</div>
+	<script type="importmap">
 		{
 		    "imports": {
 			"three": "https://threejs.org/build/three.module.js",
 			"three/addons/": "https://threejs.org/examples/jsm/"
 		    }
 		}</script>
-		<script type="module" src="/main.js"></script>
-	</body>
+	<script type="module" src="/main.js"></script>
+</body>
+
 </html>

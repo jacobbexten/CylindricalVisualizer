@@ -10,8 +10,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x142c48, 1);
+renderer.setSize(window.innerWidth * 0.5, window.innerHeight * 0.5);
+renderer.setClearColor(0x244d69, 1);
 renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
 
@@ -22,9 +22,9 @@ camera.position.set(0, Math.PI, Math.PI * 2);
 controls.update();
 
 // create cylinder geometry to represent segment
-var radiusTop = 0.75;
-var radiusBottom = 1;
-var height = 12;
+var radiusTop = 0.7;
+var radiusBottom = 0.8;
+var height = 8;
 var radialSegments = 12;
 
 let cylinder;
@@ -67,7 +67,6 @@ function createCylinder() {
   cylinder.rotation.y = currentRotation.y;
   cylinder.rotation.z = currentRotation.z;
 
-  // scene.add(cylinder);
   scene.add(cylinder);
 
   cylinder.rotation.z = Math.PI / 2;
@@ -77,7 +76,8 @@ createCylinder();
 
 function animate() {
   if (cylinder) {
-    cylinder.rotation.x += 0.01;
+    cylinder.rotation.x += 0.005;
+    camera.rotation.z += 0.005;
   }
 
   renderer.render(scene, camera);
@@ -88,20 +88,35 @@ const radiusBottomSlider = document.getElementById("radiusBottomSlider");
 const radiusTopSlider = document.getElementById("radiusTopSlider");
 const lengthSlider = document.getElementById("lengthSlider");
 
+const bottomLabel = document.getElementById("bottomValue");
+const topLabel = document.getElementById("topValue");
+const lengthLabel = document.getElementById("lengthValue");
+
+updateLabels();
+
 // an event listener to change the radius of the bottom end
 radiusBottomSlider.addEventListener("input", (event) => {
   radiusBottom = parseFloat(event.target.value);
+  updateLabels();
   createCylinder();
 });
 
 // an event listener to change the radius of the top end
 radiusTopSlider.addEventListener("input", (event) => {
   radiusTop = parseFloat(event.target.value);
+  updateLabels();
   createCylinder();
 });
 
 // an event listener to change the length
 lengthSlider.addEventListener("input", (event) => {
   height = event.target.value;
+  updateLabels();
   createCylinder();
 });
+
+function updateLabels() {
+  bottomLabel.textContent = Math.round(radiusBottom * 12 * 2);
+  topLabel.textContent = Math.round(radiusTop * 12 * 2);
+  lengthLabel.textContent = height;
+}
