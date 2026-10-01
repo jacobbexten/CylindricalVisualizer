@@ -86,6 +86,11 @@ outlinePass.hiddenEdgeColor.set("#69b4cc");
 composer.addPass(outlinePass);
 
 function createCylinder() {
+  // free GPU resources of the previous parts before rebuilding
+  for (const part of cylinderGroup.children) {
+    part.geometry.dispose();
+    part.material.dispose();
+  }
   cylinderGroup.clear();
 
   const cylinderGeometry = new THREE.CylinderGeometry(
