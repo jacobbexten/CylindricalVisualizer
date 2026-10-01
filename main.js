@@ -17,7 +17,7 @@ const camera = new THREE.PerspectiveCamera(
   fov,
   initialSize.width / initialSize.height,
   0.1,
-  1000
+  1000,
 );
 
 const renderer = new THREE.WebGLRenderer();
@@ -38,12 +38,12 @@ for (let i = 0; i < starCount * 3; i++) {
 
 starsGeometry.setAttribute(
   "position",
-  new THREE.BufferAttribute(starPositions, 3)
+  new THREE.BufferAttribute(starPositions, 3),
 );
 
 // referenced via import.meta.url so Vite bundles it
 const starTexture = new THREE.TextureLoader().load(
-  new URL("./star.png", import.meta.url).href
+  new URL("./star.png", import.meta.url).href,
 );
 
 const starsMaterial = new THREE.PointsMaterial({
@@ -97,7 +97,7 @@ composer.addPass(renderPass);
 const outlinePass = new OutlinePass(
   new THREE.Vector2(initialSize.width, initialSize.height),
   scene,
-  camera
+  camera,
 );
 outlinePass.visibleEdgeColor.set("#69b4cc");
 outlinePass.hiddenEdgeColor.set("#69b4cc");
@@ -123,7 +123,7 @@ function createCylinder() {
     radiusTop,
     radiusBottom,
     height,
-    radialSegments
+    radialSegments,
   );
 
   const cylinderMaterial = new THREE.MeshBasicMaterial({
@@ -170,7 +170,7 @@ function createCylinder() {
   // add bottom end
   const bottomCircleGeometry = new THREE.CircleGeometry(
     radiusBottom,
-    radialSegments
+    radialSegments,
   );
   bottomCircleGeometry.rotateX(Math.PI / 2);
   bottomCircleGeometry.translate(0, -height / 2, 0);
@@ -182,7 +182,10 @@ function createCylinder() {
     transparent: true,
   });
 
-  const bottomCircle = new THREE.Mesh(bottomCircleGeometry, bottomCircleMaterial);
+  const bottomCircle = new THREE.Mesh(
+    bottomCircleGeometry,
+    bottomCircleMaterial,
+  );
   cylinderGroup.add(bottomCircle);
 
   outlinePass.selectedObjects = [cylinder];
@@ -224,10 +227,10 @@ function updateDiameters(changedSlider) {
 
 // event listeners to change the diameters of the ends
 bottomDiameterSlider.addEventListener("input", () =>
-  updateDiameters(bottomDiameterSlider)
+  updateDiameters(bottomDiameterSlider),
 );
 topDiameterSlider.addEventListener("input", () =>
-  updateDiameters(topDiameterSlider)
+  updateDiameters(topDiameterSlider),
 );
 
 // an event listener to change the length
