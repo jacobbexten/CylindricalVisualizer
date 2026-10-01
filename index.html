@@ -137,51 +137,17 @@
           <div class="end-vis-row">
             <figure class="end-vis">
               <figcaption class="end-vis-label">Bottom</figcaption>
+              <!-- rings, spokes and profile are drawn by main.js -->
               <svg
-                viewBox="-100 -100 200 200"
+                id="bottomRadar"
                 class="radar-chart"
                 aria-hidden="true"
-              >
-                <circle cx="0" cy="0" r="20" class="ring"></circle>
-                <circle cx="0" cy="0" r="40" class="ring"></circle>
-                <circle cx="0" cy="0" r="60" class="ring"></circle>
-                <circle cx="0" cy="0" r="80" class="ring"></circle>
-
-                <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
-                <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
-                <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
-                <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
-                <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
-                <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
-                <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
-                <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
-
-                <polygon id="bottomProfile" class="data-polygon"></polygon>
-              </svg>
+              ></svg>
             </figure>
             <figure class="end-vis">
               <figcaption class="end-vis-label">Top</figcaption>
-              <svg
-                viewBox="-100 -100 200 200"
-                class="radar-chart"
-                aria-hidden="true"
-              >
-                <circle cx="0" cy="0" r="20" class="ring"></circle>
-                <circle cx="0" cy="0" r="40" class="ring"></circle>
-                <circle cx="0" cy="0" r="60" class="ring"></circle>
-                <circle cx="0" cy="0" r="80" class="ring"></circle>
-
-                <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
-                <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
-                <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
-                <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
-                <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
-                <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
-                <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
-                <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
-
-                <polygon id="topProfile" class="data-polygon"></polygon>
-              </svg>
+              <!-- rings, spokes and profile are drawn by main.js -->
+              <svg id="topRadar" class="radar-chart" aria-hidden="true"></svg>
             </figure>
           </div>
         </section>
