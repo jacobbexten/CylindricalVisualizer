@@ -201,7 +201,7 @@ radiusTopSlider.addEventListener("input", (event) => {
 
 // an event listener to change the length
 lengthSlider.addEventListener("input", (event) => {
-  height = event.target.value;
+  height = parseFloat(event.target.value);
   updateLabels();
   createCylinder();
 });
