@@ -33,7 +33,7 @@ starsGeometry.setAttribute(
   new THREE.BufferAttribute(starPositions, 3)
 );
 
-// resolved relative to this module so it works both raw and in Vite builds
+// referenced via import.meta.url so Vite bundles it
 const starTexture = new THREE.TextureLoader().load(
   new URL("./star.png", import.meta.url).href
 );
