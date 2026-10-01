@@ -203,19 +203,32 @@ const lengthLabel = document.getElementById("lengthValue");
 
 updateLabels();
 
-// an event listener to change the diameter of the bottom end
-bottomDiameterSlider.addEventListener("input", (event) => {
-  radiusBottom = diameterToRadius(parseFloat(event.target.value));
-  updateLabels();
-  createCylinder();
-});
+// keep the top no wider than the bottom: dragging one diameter past the
+// other pushes the other along with it
+function updateDiameters(changedSlider) {
+  const bottom = parseFloat(bottomDiameterSlider.value);
+  const top = parseFloat(topDiameterSlider.value);
+  if (top > bottom) {
+    if (changedSlider === bottomDiameterSlider) {
+      topDiameterSlider.value = bottom;
+    } else {
+      bottomDiameterSlider.value = top;
+    }
+  }
 
-// an event listener to change the diameter of the top end
-topDiameterSlider.addEventListener("input", (event) => {
-  radiusTop = diameterToRadius(parseFloat(event.target.value));
+  radiusBottom = diameterToRadius(parseFloat(bottomDiameterSlider.value));
+  radiusTop = diameterToRadius(parseFloat(topDiameterSlider.value));
   updateLabels();
   createCylinder();
-});
+}
+
+// event listeners to change the diameters of the ends
+bottomDiameterSlider.addEventListener("input", () =>
+  updateDiameters(bottomDiameterSlider)
+);
+topDiameterSlider.addEventListener("input", () =>
+  updateDiameters(topDiameterSlider)
+);
 
 // an event listener to change the length
 lengthSlider.addEventListener("input", (event) => {
