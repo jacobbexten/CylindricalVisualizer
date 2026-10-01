@@ -1,118 +1,190 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="ice">
   <head>
     <meta charset="utf-8" />
-    <title>CylindricalVisualizer</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#070b1a" />
+    <meta
+      name="description"
+      content="Interactive 3D visualizer for tapered cylindrical segments."
+    />
+    <title>Cylindrical Visualizer</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23070b1a'/%3E%3Cpath d='M8 9 L25 12 L25 20 L8 23 Z' fill='%2369b4cc' fill-opacity='.5' stroke='%239fe3f5' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cellipse cx='8' cy='16' rx='2.5' ry='7' fill='%2369b4cc'/%3E%3C/svg%3E"
+    />
+    <script>
+      // apply the saved theme before first paint to avoid a flash of the default
+      try {
+        const saved = localStorage.getItem("theme");
+        if (saved) document.documentElement.dataset.theme = saved;
+      } catch {
+        // storage unavailable (private mode etc.): keep the default
+      }
+    </script>
     <link rel="stylesheet" href="app.css" />
   </head>
 
   <body>
-    <div class="grid-overlay"></div>
-    <div id="title-container">
-      <div class="title-bar"></div>
-      <label class="title">Cylindrical Visualizer</label>
+    <!-- the three.js canvas is inserted here by main.js, behind the UI -->
+    <div class="grid-overlay" aria-hidden="true"></div>
+
+    <div class="app">
+      <header class="glass header">
+        <h1 class="title">Cylindrical Visualizer</h1>
+        <div class="theme-picker" role="group" aria-label="Theme">
+          <button
+            type="button"
+            class="theme-swatch"
+            data-theme-option="ice"
+            aria-label="Ice theme"
+            aria-pressed="true"
+          ></button>
+          <button
+            type="button"
+            class="theme-swatch"
+            data-theme-option="nebula"
+            aria-label="Nebula theme"
+            aria-pressed="false"
+          ></button>
+          <button
+            type="button"
+            class="theme-swatch"
+            data-theme-option="solar"
+            aria-label="Solar theme"
+            aria-pressed="false"
+          ></button>
+        </div>
+      </header>
+
+      <!-- empty area the cylinder is centered in; the canvas behind shows through -->
+      <main class="stage" aria-label="3D view"></main>
+
+      <aside class="glass panel">
+        <section class="panel-section" aria-labelledby="dimensions-heading">
+          <h2 id="dimensions-heading" class="section-heading">Dimensions</h2>
+          <div class="control">
+            <div class="control-header">
+              <label class="control-label" for="bottomDiameterSlider"
+                >Bottom diameter</label
+              >
+              <output class="control-value" for="bottomDiameterSlider"
+                ><span id="bottomValue"></span> in</output
+              >
+            </div>
+            <input
+              id="bottomDiameterSlider"
+              type="range"
+              min="12"
+              max="24"
+              value="19"
+              step="1"
+              class="slider"
+            />
+          </div>
+          <div class="control">
+            <div class="control-header">
+              <label class="control-label" for="topDiameterSlider"
+                >Top diameter</label
+              >
+              <output class="control-value" for="topDiameterSlider"
+                ><span id="topValue"></span> in</output
+              >
+            </div>
+            <input
+              id="topDiameterSlider"
+              type="range"
+              min="12"
+              max="24"
+              value="17"
+              step="1"
+              class="slider"
+            />
+          </div>
+          <div class="control">
+            <div class="control-header">
+              <label class="control-label" for="lengthSlider">Length</label>
+              <output class="control-value" for="lengthSlider"
+                ><span id="lengthValue"></span> ft</output
+              >
+            </div>
+            <input
+              id="lengthSlider"
+              type="range"
+              min="8"
+              max="20"
+              value="8"
+              step="1"
+              class="slider"
+            />
+          </div>
+        </section>
+
+        <section class="panel-section" aria-labelledby="ends-heading">
+          <h2 id="ends-heading" class="section-heading">End profiles</h2>
+          <div class="end-vis-row">
+            <figure class="end-vis">
+              <figcaption class="end-vis-label">Bottom</figcaption>
+              <svg
+                viewBox="-100 -100 200 200"
+                class="radar-chart"
+                aria-hidden="true"
+              >
+                <circle cx="0" cy="0" r="20" class="ring"></circle>
+                <circle cx="0" cy="0" r="40" class="ring"></circle>
+                <circle cx="0" cy="0" r="60" class="ring"></circle>
+                <circle cx="0" cy="0" r="80" class="ring"></circle>
+
+                <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
+                <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
+                <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
+                <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
+                <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
+                <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
+                <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
+                <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
+
+                <polygon
+                  points="0,-40 34.64,-20 51.96,0 0,50 -34.64,20 -51.96,-10"
+                  class="data-polygon"
+                ></polygon>
+              </svg>
+            </figure>
+            <figure class="end-vis">
+              <figcaption class="end-vis-label">Top</figcaption>
+              <svg
+                viewBox="-100 -100 200 200"
+                class="radar-chart"
+                aria-hidden="true"
+              >
+                <circle cx="0" cy="0" r="20" class="ring"></circle>
+                <circle cx="0" cy="0" r="40" class="ring"></circle>
+                <circle cx="0" cy="0" r="60" class="ring"></circle>
+                <circle cx="0" cy="0" r="80" class="ring"></circle>
+
+                <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
+                <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
+                <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
+                <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
+                <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
+                <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
+                <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
+                <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
+
+                <polygon
+                  points="0,-43 34.64,-20 21.6,0 0,30 -31.14,20 -21.96,-10"
+                  class="data-polygon"
+                ></polygon>
+              </svg>
+            </figure>
+          </div>
+        </section>
+      </aside>
     </div>
-    <div id="controls-container">
-      <div class="size-controls">
-        <div class="control">
-          <label class="control-value-label" for="bottomDiameterSlider"
-            ><span id="bottomValue"></span> in.</label
-          >
-          <input
-            id="bottomDiameterSlider"
-            type="range"
-            min="12"
-            max="24"
-            value="19"
-            step="1"
-            class="slider"
-          />
-          <label class="control-label">BOTTOM</label>
-        </div>
-        <div class="control">
-          <label class="control-value-label" for="topDiameterSlider"
-            ><span id="topValue"></span> in.</label
-          >
-          <input
-            id="topDiameterSlider"
-            type="range"
-            min="12"
-            max="24"
-            value="17"
-            step="1"
-            class="slider"
-          />
-          <label class="control-label">TOP</label>
-        </div>
-        <div class="control">
-          <label class="control-value-label" for="lengthSlider"
-            ><span id="lengthValue"></span> ft.</label
-          >
-          <input
-            id="lengthSlider"
-            type="range"
-            min="8"
-            max="20"
-            value="8"
-            step="1"
-            class="slider"
-          />
-          <label class="control-label">LENGTH</label>
-        </div>
-      </div>
-      <div class="end-vis-container">
-        <div class="bottom-end-vis-label-container"></div>
-        <label class="end-vis-label">BOTTOM</label>
-        <div class="end-vis-content">
-          <svg viewBox="-100 -100 200 200" class="radar-chart">
-            <circle cx="0" cy="0" r="20" class="ring"></circle>
-            <circle cx="0" cy="0" r="40" class="ring"></circle>
-            <circle cx="0" cy="0" r="60" class="ring"></circle>
-            <circle cx="0" cy="0" r="80" class="ring"></circle>
 
-            <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
-            <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
-            <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
-            <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
-            <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
-            <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
-            <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
-            <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
-
-            <polygon
-              points="0,-40 34.64,-20 51.96,0 0,50 -34.64,20 -51.96,-10"
-              class="data-polygon"
-            ></polygon>
-          </svg>
-        </div>
-      </div>
-      <div class="end-vis-container">
-        <div class="top-end-vis-label-container"></div>
-        <label class="end-vis-label">TOP</label>
-        <div class="end-vis-content">
-          <svg viewBox="-100 -100 200 200" class="radar-chart">
-            <circle cx="0" cy="0" r="20" class="ring"></circle>
-            <circle cx="0" cy="0" r="40" class="ring"></circle>
-            <circle cx="0" cy="0" r="60" class="ring"></circle>
-            <circle cx="0" cy="0" r="80" class="ring"></circle>
-
-            <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
-            <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
-            <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
-            <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
-            <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
-            <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
-            <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
-            <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
-
-            <polygon
-              points="0,-43 34.64,-20 21.6,0 0,30 -31.14,20 -21.96,-10"
-              class="data-polygon"
-            ></polygon>
-          </svg>
-        </div>
-      </div>
-    </div>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
