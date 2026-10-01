@@ -214,7 +214,8 @@ new ResizeObserver(layout).observe(stage);
 // sliders rescale the flaws instead of re-rolling them
 const flawSpokes = 8;
 const maxFlawDepth = 4; // feet
-const radarRadius = 80; // outer ring of the radar charts in index.html
+const radarRadius = 80; // outer ring of the radar charts, in SVG units
+const radarRings = 4;
 const flawFaceOffset = 0.01; // feet
 
 function randomFlaw() {
@@ -236,6 +237,48 @@ function spokeAngle(i) {
   return (i / flawSpokes) * Math.PI * 2;
 }
 
+const svgNamespace = "http://www.w3.org/2000/svg";
+
+function svgElement(name, attributes) {
+  const element = document.createElementNS(svgNamespace, name);
+  for (const [key, value] of Object.entries(attributes)) {
+    element.setAttribute(key, value);
+  }
+  return element;
+}
+
+// rings and one spoke per flaw point; returns the (empty) profile polygon
+function createRadarChart(svg) {
+  const extent = radarRadius * 1.25;
+  svg.setAttribute(
+    "viewBox",
+    `${-extent} ${-extent} ${extent * 2} ${extent * 2}`,
+  );
+  for (let i = 1; i <= radarRings; i++) {
+    svg.append(
+      svgElement("circle", {
+        r: (radarRadius * i) / radarRings,
+        class: "ring",
+      }),
+    );
+  }
+  for (let i = 0; i < flawSpokes; i++) {
+    const angle = spokeAngle(i);
+    svg.append(
+      svgElement("line", {
+        x1: 0,
+        y1: 0,
+        x2: (radarRadius * Math.cos(angle)).toFixed(1),
+        y2: (radarRadius * Math.sin(angle)).toFixed(1),
+        class: "axis",
+      }),
+    );
+  }
+  const polygon = svgElement("polygon", { class: "data-polygon" });
+  svg.append(polygon);
+  return polygon;
+}
+
 function drawRadarChart(polygon, flaw) {
   const points = flaw.profile.map((fraction, i) => {
     const r = radarRadius * fraction;
@@ -245,8 +288,8 @@ function drawRadarChart(polygon, flaw) {
   polygon.setAttribute("points", points.join(" "));
 }
 
-const bottomProfile = document.getElementById("bottomProfile");
-const topProfile = document.getElementById("topProfile");
+const bottomProfile = createRadarChart(document.getElementById("bottomRadar"));
+const topProfile = createRadarChart(document.getElementById("topRadar"));
 drawRadarChart(bottomProfile, bottomFlaw);
 drawRadarChart(topProfile, topFlaw);
 
