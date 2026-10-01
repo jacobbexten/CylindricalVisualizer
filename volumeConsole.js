@@ -21,6 +21,7 @@ export function createVolumeConsole({
   output,
   status,
   button,
+  runButton,
   closeButton,
   backdrop,
   docked,
@@ -44,6 +45,7 @@ export function createVolumeConsole({
     state = next;
     root.dataset.state = next;
     button.dataset.state = next;
+    runButton.dataset.state = next;
   }
 
   // --- printing primitives; every wait checks for cancellation ---
@@ -388,6 +390,7 @@ export function createVolumeConsole({
   }
 
   button.addEventListener("click", calculateVolume);
+  runButton.addEventListener("click", calculateVolume);
   closeButton.addEventListener("click", close);
   backdrop.addEventListener("click", close);
   document.addEventListener("keydown", (event) => {

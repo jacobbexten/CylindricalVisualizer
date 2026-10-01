@@ -679,6 +679,7 @@ const volumeConsole = createVolumeConsole({
   output: document.getElementById("consoleOutput"),
   status: document.getElementById("consoleStatus"),
   button: document.getElementById("calculateVolumeButton"),
+  runButton: document.getElementById("consoleRun"),
   closeButton: document.getElementById("consoleClose"),
   backdrop: document.getElementById("consoleBackdrop"),
   // keep in sync with the docked-console media query in app.css
