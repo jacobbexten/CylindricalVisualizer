@@ -1,86 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CylindricalVisualizer</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
 
-<head>
-	<meta charset="utf-8">
-	<title>CylindricalVisualizer</title>
-	<link rel="stylesheet" href="app.css">
-</head>
+  <body>
+    <div class="grid-overlay"></div>
+    <div id="title-container">
+      <div class="title-bar"></div>
+      <label class="title">Cylindrical Visualizer</label>
+    </div>
+    <div id="controls-container">
+      <div class="size-controls">
+        <div class="control">
+          <label class="control-value-label" for="bottomDiameterSlider"
+            ><span id="bottomValue"></span> in.</label
+          >
+          <input
+            id="bottomDiameterSlider"
+            type="range"
+            min="12"
+            max="24"
+            value="19"
+            step="1"
+            class="slider"
+          />
+          <label class="control-label">BOTTOM</label>
+        </div>
+        <div class="control">
+          <label class="control-value-label" for="topDiameterSlider"
+            ><span id="topValue"></span> in.</label
+          >
+          <input
+            id="topDiameterSlider"
+            type="range"
+            min="12"
+            max="24"
+            value="17"
+            step="1"
+            class="slider"
+          />
+          <label class="control-label">TOP</label>
+        </div>
+        <div class="control">
+          <label class="control-value-label" for="lengthSlider"
+            ><span id="lengthValue"></span> ft.</label
+          >
+          <input
+            id="lengthSlider"
+            type="range"
+            min="8"
+            max="20"
+            value="8"
+            step="1"
+            class="slider"
+          />
+          <label class="control-label">LENGTH</label>
+        </div>
+      </div>
+      <div class="end-vis-container">
+        <div class="bottom-end-vis-label-container"></div>
+        <label class="end-vis-label">BOTTOM</label>
+        <div class="end-vis-content">
+          <svg viewBox="-100 -100 200 200" class="radar-chart">
+            <circle cx="0" cy="0" r="20" class="ring"></circle>
+            <circle cx="0" cy="0" r="40" class="ring"></circle>
+            <circle cx="0" cy="0" r="60" class="ring"></circle>
+            <circle cx="0" cy="0" r="80" class="ring"></circle>
 
-<body>
-	<div class="grid-overlay"></div>
-	<div id="title-container">
-		<div class="title-bar"></div>
-		<label class="title">Cylindrical Visualizer</label>
-	</div>
-	<div id="controls-container">
-		<div class="size-controls">
-			<div class="control">
-				<label class="control-value-label" for="bottomDiameterSlider"><span id="bottomValue"></span> in.</label>
-				<input id="bottomDiameterSlider" type="range" min="12" max="24" value="19" step="1" class="slider">
-				<label class="control-label">BOTTOM</label>
-			</div>
-			<div class="control">
-				<label class="control-value-label" for="topDiameterSlider"><span id="topValue"></span> in.</label>
-				<input id="topDiameterSlider" type="range" min="12" max="24" value="17" step="1" class="slider">
-				<label class="control-label">TOP</label>
-			</div>
-			<div class="control">
-				<label class="control-value-label" for="lengthSlider"><span id="lengthValue"></span> ft.</label>
-				<input id="lengthSlider" type="range" min="8" max="20" value="8" step="1" class="slider">
-				<label class="control-label">LENGTH</label>
-			</div>
-		</div>
-		<div class="end-vis-container">
-			<div class="bottom-end-vis-label-container"></div>
-			<label class="end-vis-label">BOTTOM</label>
-			<div class="end-vis-content">
-				<svg viewBox="-100 -100 200 200" class="radar-chart">
-					<circle cx="0" cy="0" r="20" class="ring"></circle>
-					<circle cx="0" cy="0" r="40" class="ring"></circle>
-					<circle cx="0" cy="0" r="60" class="ring"></circle>
-					<circle cx="0" cy="0" r="80" class="ring"></circle>
+            <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
+            <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
+            <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
+            <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
+            <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
+            <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
+            <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
+            <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
 
-					<line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
-					<line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
-					<line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
-					<line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
-					<line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
-					<line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
-					<line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
-					<line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
+            <polygon
+              points="0,-40 34.64,-20 51.96,0 0,50 -34.64,20 -51.96,-10"
+              class="data-polygon"
+            ></polygon>
+          </svg>
+        </div>
+      </div>
+      <div class="end-vis-container">
+        <div class="top-end-vis-label-container"></div>
+        <label class="end-vis-label">TOP</label>
+        <div class="end-vis-content">
+          <svg viewBox="-100 -100 200 200" class="radar-chart">
+            <circle cx="0" cy="0" r="20" class="ring"></circle>
+            <circle cx="0" cy="0" r="40" class="ring"></circle>
+            <circle cx="0" cy="0" r="60" class="ring"></circle>
+            <circle cx="0" cy="0" r="80" class="ring"></circle>
 
-					<polygon points="0,-40 34.64,-20 51.96,0 0,50 -34.64,20 -51.96,-10" class="data-polygon"></polygon>
+            <line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
+            <line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
+            <line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
+            <line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
+            <line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
+            <line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
+            <line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
+            <line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
 
-				</svg>
-			</div>
-		</div>
-		<div class="end-vis-container">
-			<div class="top-end-vis-label-container"></div>
-			<label class="end-vis-label">TOP</label>
-			<div class="end-vis-content">
-				<svg viewBox="-100 -100 200 200" class="radar-chart">
-					<circle cx="0" cy="0" r="20" class="ring"></circle>
-					<circle cx="0" cy="0" r="40" class="ring"></circle>
-					<circle cx="0" cy="0" r="60" class="ring"></circle>
-					<circle cx="0" cy="0" r="80" class="ring"></circle>
-
-					<line x1="0" y1="0" x2="0" y2="-80" class="axis"></line>
-					<line x1="0" y1="0" x2="80" y2="0" class="axis"></line>
-					<line x1="0" y1="0" x2="56.5" y2="-56.5" class="axis"></line>
-					<line x1="0" y1="0" x2="56.5" y2="56.5" class="axis"></line>
-					<line x1="0" y1="0" x2="0" y2="80" class="axis"></line>
-					<line x1="0" y1="0" x2="-80" y2="0" class="axis"></line>
-					<line x1="0" y1="0" x2="-56.5" y2="56.5" class="axis"></line>
-					<line x1="0" y1="0" x2="-56.5" y2="-56.5" class="axis"></line>
-
-					<polygon points="0,-43 34.64,-20 21.6,0 0,30 -31.14,20 -21.96,-10" class="data-polygon"></polygon>
-
-				</svg>
-			</div>
-		</div>
-	</div>
-	<script type="module" src="./main.js"></script>
-</body>
-
+            <polygon
+              points="0,-43 34.64,-20 21.6,0 0,30 -31.14,20 -21.96,-10"
+              class="data-polygon"
+            ></polygon>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
 </html>
