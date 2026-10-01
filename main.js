@@ -107,7 +107,8 @@ function diameterToRadius(inches) {
 let radiusTop = diameterToRadius(parseFloat(topDiameterSlider.value));
 let radiusBottom = diameterToRadius(parseFloat(bottomDiameterSlider.value));
 let height = parseFloat(lengthSlider.value);
-const radialSegments = 20;
+const radialSegments = 64; // smooth round surface and ends
+const cageLines = 20; // lengthwise lines in the dashed cage
 
 // all cylinder parts live in one group so they rotate together
 const cylinderGroup = new THREE.Group();
@@ -329,9 +330,9 @@ function updateScan(delta) {
 
 function addScanner() {
   // glowing ring plus a faint disc; unit radius, scaled in updateScan()
-  const ringGeometry = new THREE.RingGeometry(0.92, 1, 48);
+  const ringGeometry = new THREE.RingGeometry(0.92, 1, radialSegments);
   ringGeometry.rotateX(Math.PI / 2);
-  const discGeometry = new THREE.CircleGeometry(0.92, 48);
+  const discGeometry = new THREE.CircleGeometry(0.92, radialSegments);
   discGeometry.rotateX(Math.PI / 2);
 
   const glow = (opacity) =>
@@ -413,6 +414,30 @@ function addFlaw(flaw, radius, faceY, direction) {
   }
 }
 
+function createCageGeometry(cylinderGeometry) {
+  // a 30° threshold keeps only the rims (sides meet the caps at 90°,
+  // neighboring side faces at 360° / radialSegments)
+  const rims = new THREE.EdgesGeometry(cylinderGeometry, 30);
+  const points = [];
+  const position = rims.getAttribute("position");
+  for (let i = 0; i < position.count; i++) {
+    points.push(new THREE.Vector3().fromBufferAttribute(position, i));
+  }
+  rims.dispose();
+
+  // same angles as CylinderGeometry's vertices, so the lines meet the rims
+  for (let i = 0; i < cageLines; i++) {
+    const angle = (i / cageLines) * Math.PI * 2;
+    const sin = Math.sin(angle);
+    const cos = Math.cos(angle);
+    points.push(
+      new THREE.Vector3(radiusBottom * sin, -height / 2, radiusBottom * cos),
+      new THREE.Vector3(radiusTop * sin, height / 2, radiusTop * cos),
+    );
+  }
+  return new THREE.BufferGeometry().setFromPoints(points);
+}
+
 function createCylinder() {
   // free GPU resources of the previous parts before rebuilding
   for (const part of cylinderGroup.children) {
@@ -437,8 +462,9 @@ function createCylinder() {
   const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
   cylinderGroup.add(cylinder);
 
-  // create edges of cylinder
-  const edges = new THREE.EdgesGeometry(cylinderGeometry);
+  // dashed cage: the smooth rims plus a few lengthwise lines (one per
+  // radial segment would be a dense wall of dashes)
+  const edges = createCageGeometry(cylinderGeometry);
 
   // create dashed line material
   const dashedMaterial = new THREE.LineDashedMaterial({
