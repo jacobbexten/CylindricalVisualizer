@@ -123,6 +123,7 @@ function createCylinder() {
   });
 
   const edgeCylinder = new THREE.LineSegments(edges, dashedMaterial);
+  edgeCylinder.computeLineDistances(); // required for dashes to render
   edgeCylinder.scale.set(1.2, 1, 1.2);
   cylinderGroup.add(edgeCylinder);
 
