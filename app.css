@@ -596,9 +596,8 @@ canvas {
 .detect-button[aria-pressed="true"] {
   background: rgb(var(--flaw-rgb) / 0.2);
   border-color: var(--flaw);
-  box-shadow:
-    0 0 0 1px rgb(var(--flaw-rgb) / 0.4),
-    0 0 18px rgb(var(--flaw-rgb) / 0.45);
+  /* inset, so the glow doesn't spill onto the end profiles around it */
+  box-shadow: inset 0 0 14px rgb(var(--flaw-rgb) / 0.35);
 }
 
 .detect-indicator {
