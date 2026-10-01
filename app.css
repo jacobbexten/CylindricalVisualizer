@@ -1,6 +1,6 @@
 /* ---------- theme ----------
    Every color comes from these variables. main.js reads --accent,
-   --accent-strong, --star and --defect for the three.js scene, so changing a theme
+   --accent-strong, --star and --flaw for the three.js scene, so changing a theme
    here changes the 3D view too. Channel variables (*-rgb) allow alpha
    variants: rgb(var(--accent-rgb) / 0.4). */
 
@@ -10,8 +10,8 @@
   --accent-rgb: 105 180 204;
   --accent-strong: #9fe3f5;
   --star: #e6f4ff;
-  --defect: #ff6b8a;
-  --defect-rgb: 255 107 138;
+  --flaw: #ff6b8a;
+  --flaw-rgb: 255 107 138;
   --bg: #070b1a;
   --nebula-1: 31 78 121; /* rgb channels */
   --nebula-2: 52 38 110;
@@ -24,8 +24,8 @@
   --accent-rgb: 180 140 255;
   --accent-strong: #dcc8ff;
   --star: #f3eaff;
-  --defect: #ffb454;
-  --defect-rgb: 255 180 84;
+  --flaw: #ffb454;
+  --flaw-rgb: 255 180 84;
   --bg: #0b0716;
   --nebula-1: 96 40 140;
   --nebula-2: 160 40 110;
@@ -38,8 +38,8 @@
   --accent-rgb: 242 166 90;
   --accent-strong: #ffd29e;
   --star: #fff3e0;
-  --defect: #ff4f6d;
-  --defect-rgb: 255 79 109;
+  --flaw: #ff4f6d;
+  --flaw-rgb: 255 79 109;
   --bg: #0f0a08;
   --nebula-1: 140 60 30;
   --nebula-2: 110 30 60;
@@ -541,10 +541,86 @@ canvas {
 }
 
 .radar-chart .data-polygon {
-  fill: rgb(var(--defect-rgb) / 0.35);
-  stroke: var(--defect);
+  fill: rgb(var(--flaw-rgb) / 0.35);
+  stroke: var(--flaw);
   stroke-width: 1.5;
-  filter: drop-shadow(0 0 6px rgb(var(--defect-rgb) / 0.6));
+  filter: drop-shadow(0 0 6px rgb(var(--flaw-rgb) / 0.6));
+  /* hidden until the flaw scan reaches this end; grows out from the center */
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: 0 0;
+  transition:
+    opacity 0.4s ease,
+    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.radar-chart .data-polygon.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---------- flaw detection toggle ---------- */
+
+.detect-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgb(var(--flaw-rgb) / 0.08);
+  border: 1px solid rgb(var(--flaw-rgb) / 0.35);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.detect-button:hover {
+  background: rgb(var(--flaw-rgb) / 0.16);
+  border-color: rgb(var(--flaw-rgb) / 0.6);
+}
+
+.detect-button:focus-visible {
+  outline: 2px solid var(--flaw);
+  outline-offset: 2px;
+}
+
+.detect-button[aria-pressed="true"] {
+  background: rgb(var(--flaw-rgb) / 0.2);
+  border-color: var(--flaw);
+  box-shadow:
+    0 0 0 1px rgb(var(--flaw-rgb) / 0.4),
+    0 0 18px rgb(var(--flaw-rgb) / 0.45);
+}
+
+.detect-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--flaw-rgb) / 0.35);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.detect-button[aria-pressed="true"] .detect-indicator {
+  background: var(--flaw);
+  box-shadow: 0 0 10px var(--flaw);
+  animation: detect-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes detect-pulse {
+  50% {
+    box-shadow: 0 0 2px var(--flaw);
+  }
 }
 
 /* stacked layout: tighter panel so the 3D view keeps most of the screen */

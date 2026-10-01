@@ -26,7 +26,7 @@ function readThemeColors() {
     accent: color("--accent"),
     accentStrong: color("--accent-strong"),
     star: color("--star"),
-    defect: color("--defect"),
+    flaw: color("--flaw"),
     bg: style.getPropertyValue("--bg").trim(),
   };
 }
@@ -47,6 +47,7 @@ const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(initialSize.width, initialSize.height);
 renderer.setClearColor(0x000000, 0);
+renderer.localClippingEnabled = true; // the flaw scan clips the flaws
 renderer.setAnimationLoop(animate);
 document.body.prepend(renderer.domElement);
 
@@ -204,22 +205,22 @@ function layout() {
 window.addEventListener("resize", layout);
 new ResizeObserver(layout).observe(stage);
 
-// --- defects ---
+// --- flaws ---
 
 // each end has a random profile of 8 points, one per 45° radar spoke, that
 // tapers inward to an apex on the axis: a pyramid inside the cylinder.
 // stored as fractions of the end radius and of the allowed depth, so the
-// sliders rescale the defects instead of re-rolling them
-const defectSpokes = 8;
-const maxDefectDepth = 4; // feet
+// sliders rescale the flaws instead of re-rolling them
+const flawSpokes = 8;
+const maxFlawDepth = 4; // feet
 const radarRadius = 80; // outer ring of the radar charts in index.html
-const defectFaceOffset = 0.01; // feet
+const flawFaceOffset = 0.01; // feet
 
-function randomDefect() {
+function randomFlaw() {
   return {
     // squared to pull points toward the center, capped at half the radius
     profile: Array.from(
-      { length: defectSpokes },
+      { length: flawSpokes },
       () => 0.1 + 0.4 * Math.random() ** 2,
     ),
     // Math.random() < 1, so the depth stays below the allowed maximum
@@ -227,15 +228,15 @@ function randomDefect() {
   };
 }
 
-const bottomDefect = randomDefect();
-const topDefect = randomDefect();
+const bottomFlaw = randomFlaw();
+const topFlaw = randomFlaw();
 
 function spokeAngle(i) {
-  return (i / defectSpokes) * Math.PI * 2;
+  return (i / flawSpokes) * Math.PI * 2;
 }
 
-function drawRadarChart(polygon, defect) {
-  const points = defect.profile.map((fraction, i) => {
+function drawRadarChart(polygon, flaw) {
+  const points = flaw.profile.map((fraction, i) => {
     const r = radarRadius * fraction;
     const angle = spokeAngle(i);
     return `${(r * Math.cos(angle)).toFixed(1)},${(r * Math.sin(angle)).toFixed(1)}`;
@@ -243,19 +244,105 @@ function drawRadarChart(polygon, defect) {
   polygon.setAttribute("points", points.join(" "));
 }
 
-drawRadarChart(document.getElementById("bottomProfile"), bottomDefect);
-drawRadarChart(document.getElementById("topProfile"), topDefect);
+const bottomProfile = document.getElementById("bottomProfile");
+const topProfile = document.getElementById("topProfile");
+drawRadarChart(bottomProfile, bottomFlaw);
+drawRadarChart(topProfile, topFlaw);
+
+// no automatic spinning or scan sweep for users who ask for reduced motion
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+// flaws start hidden; "Detect flaws" sweeps a scanner ring from the bottom
+// end to the top, revealing the flaws behind it (and back again to hide).
+// scanProgress runs 0..1 along the length toward scanTarget
+let scanProgress = 0;
+let scanTarget = 0;
+const scanDuration = 1.8; // seconds for a full sweep
+const scanMargin = 0.05; // feet past each end, so 0 / 1 clip everything / nothing
+const scanClock = new THREE.Clock();
+
+// keeps the part of the flaws below the scan line; updated every frame in
+// world space, since clipping planes ignore the group's rotation
+const flawClipLocal = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
+const flawClipPlane = new THREE.Plane();
+let flawParts = [];
+let scannerParts = [];
+
+function scanY() {
+  return THREE.MathUtils.lerp(
+    -height / 2 - scanMargin,
+    height / 2 + scanMargin,
+    scanProgress,
+  );
+}
+
+function updateScan(delta) {
+  if (reducedMotion.matches) {
+    scanProgress = scanTarget;
+  } else {
+    const step = delta / scanDuration;
+    scanProgress += THREE.MathUtils.clamp(
+      scanTarget - scanProgress,
+      -step,
+      step,
+    );
+  }
+
+  const y = scanY();
+  flawClipLocal.constant = y;
+  cylinderGroup.updateMatrixWorld();
+  flawClipPlane.copy(flawClipLocal).applyMatrix4(cylinderGroup.matrixWorld);
+  for (const part of flawParts) part.visible = scanProgress > 0;
+
+  // the ring follows the taper, just outside the dashed edges
+  const scanning = scanProgress !== scanTarget;
+  const t = THREE.MathUtils.clamp((y + height / 2) / height, 0, 1);
+  const radius = THREE.MathUtils.lerp(radiusBottom, radiusTop, t) * 1.25;
+  for (const part of scannerParts) {
+    part.visible = scanning;
+    part.position.y = y;
+    part.scale.set(radius, 1, radius);
+  }
+
+  // each radar profile appears once the scan has passed its flaw's base
+  bottomProfile.classList.toggle("revealed", scanProgress > 0.02);
+  topProfile.classList.toggle("revealed", scanProgress > 0.98);
+}
+
+function addScanner() {
+  // glowing ring plus a faint disc; unit radius, scaled in updateScan()
+  const ringGeometry = new THREE.RingGeometry(0.92, 1, 48);
+  ringGeometry.rotateX(Math.PI / 2);
+  const discGeometry = new THREE.CircleGeometry(0.92, 48);
+  discGeometry.rotateX(Math.PI / 2);
+
+  const glow = (opacity) =>
+    new THREE.MeshBasicMaterial({
+      color: themeColors.flaw,
+      side: THREE.DoubleSide,
+      opacity,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+  scannerParts = [
+    new THREE.Mesh(ringGeometry, glow(0.95)),
+    new THREE.Mesh(discGeometry, glow(0.18)),
+  ];
+  for (const part of scannerParts) cylinderGroup.add(part);
+}
 
 // pyramid with its base on the end face at faceY and its apex on the axis,
 // direction (+1 / -1) pointing into the cylinder
-function createDefectGeometry(defect, radius, faceY, direction) {
+function createFlawGeometry(flaw, radius, faceY, direction) {
   // at most half the length, so the two pyramids never overlap
-  const depth = defect.depth * Math.min(maxDefectDepth, height / 2);
+  const depth = flaw.depth * Math.min(maxFlawDepth, height / 2);
   const apex = new THREE.Vector3(0, faceY + direction * depth, 0);
   // the base sits just proud of the end cap; coplanar faces z-fight
-  const baseY = faceY - direction * defectFaceOffset;
+  const baseY = faceY - direction * flawFaceOffset;
   const center = new THREE.Vector3(0, baseY, 0);
-  const base = defect.profile.map((fraction, i) => {
+  const base = flaw.profile.map((fraction, i) => {
     const angle = spokeAngle(i);
     return new THREE.Vector3(
       radius * fraction * Math.cos(angle),
@@ -273,28 +360,36 @@ function createDefectGeometry(defect, radius, faceY, direction) {
   return new THREE.BufferGeometry().setFromPoints(vertices);
 }
 
-function addDefect(defect, radius, faceY, direction) {
-  const geometry = createDefectGeometry(defect, radius, faceY, direction);
+function addFlaw(flaw, radius, faceY, direction) {
+  const geometry = createFlawGeometry(flaw, radius, faceY, direction);
 
   const material = new THREE.MeshBasicMaterial({
-    color: themeColors.defect.clone().multiplyScalar(0.55),
+    color: themeColors.flaw.clone().multiplyScalar(0.55),
     side: THREE.DoubleSide,
     opacity: 0.75,
     transparent: true,
+    clippingPlanes: [flawClipPlane],
   });
   const mesh = new THREE.Mesh(geometry, material);
   // drawn before the translucent cylinder so it shows through it rather
   // than being depth-tested away behind the cylinder's surface
   mesh.renderOrder = -1;
-  cylinderGroup.add(mesh);
 
   // edges make the pyramid's faces readable on the flat-shaded mesh
   const edgeMaterial = new THREE.LineBasicMaterial({
-    color: themeColors.defect,
+    color: themeColors.flaw,
+    clippingPlanes: [flawClipPlane],
   });
-  cylinderGroup.add(
-    new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edgeMaterial),
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geometry),
+    edgeMaterial,
   );
+
+  for (const part of [mesh, edges]) {
+    part.visible = scanProgress > 0;
+    cylinderGroup.add(part);
+    flawParts.push(part);
+  }
 }
 
 function createCylinder() {
@@ -374,8 +469,11 @@ function createCylinder() {
   );
   cylinderGroup.add(bottomCircle);
 
-  addDefect(bottomDefect, radiusBottom, -height / 2, 1);
-  addDefect(topDefect, radiusTop, height / 2, -1);
+  flawParts = [];
+  addFlaw(bottomFlaw, radiusBottom, -height / 2, 1);
+  addFlaw(topFlaw, radiusTop, height / 2, -1);
+  addScanner();
+  updateScan(0);
 
   outlinePass.selectedObjects = [cylinder];
 }
@@ -383,13 +481,11 @@ function createCylinder() {
 createCylinder();
 layout();
 
-// no automatic spinning for users who ask for reduced motion
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
 function animate() {
   if (!reducedMotion.matches) {
     cylinderGroup.rotation.x += 0.005;
   }
+  updateScan(scanClock.getDelta());
   controls.update();
   composer.render();
 }
@@ -431,6 +527,15 @@ for (const button of themeButtons) {
 // index.html already set data-theme from storage before first paint;
 // this validates it and syncs the buttons and scene
 applyTheme(document.documentElement.dataset.theme);
+
+// --- flaw detection toggle ---
+
+const detectFlawsButton = document.getElementById("detectFlawsButton");
+
+detectFlawsButton.addEventListener("click", () => {
+  scanTarget = scanTarget === 1 ? 0 : 1;
+  detectFlawsButton.setAttribute("aria-pressed", String(scanTarget === 1));
+});
 
 // --- sliders ---
 
