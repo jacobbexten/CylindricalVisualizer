@@ -12,8 +12,9 @@ function viewportSize() {
 const initialSize = viewportSize();
 
 const scene = new THREE.Scene();
+const fov = 50;
 const camera = new THREE.PerspectiveCamera(
-  100,
+  fov,
   initialSize.width / initialSize.height,
   0.1,
   1000
@@ -61,8 +62,11 @@ scene.add(stars);
 // set orbital camera
 const controls = new OrbitControls(camera, renderer.domElement);
 
-camera.position.set(0, Math.PI, Math.PI * 2);
-camera.position.x += 5;
+// pull the camera back so the origin is framed as it was with the old 100° FOV
+const framingScale =
+  Math.tan(THREE.MathUtils.degToRad(100 / 2)) /
+  Math.tan(THREE.MathUtils.degToRad(fov / 2));
+camera.position.set(5, Math.PI, Math.PI * 2).multiplyScalar(framingScale);
 controls.update();
 
 // create cylinder geometry to represent segment
