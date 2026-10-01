@@ -76,11 +76,6 @@ const cylinderGroup = new THREE.Group();
 cylinderGroup.rotation.z = Math.PI / 2;
 scene.add(cylinderGroup);
 
-// Add lighting
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 5, 5);
-scene.add(light);
-
 // Post-processing
 const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
@@ -133,7 +128,6 @@ function createCylinder() {
   // create dashed line material
   const dashedMaterial = new THREE.LineDashedMaterial({
     color: 0x69b4cc,
-    linewidth: 1,
     dashSize: 0.25,
     gapSize: 0.25,
     transparent: true,
