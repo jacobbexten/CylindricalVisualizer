@@ -26,6 +26,7 @@ function readThemeColors() {
     accent: color("--accent"),
     accentStrong: color("--accent-strong"),
     star: color("--star"),
+    defect: color("--defect"),
     bg: style.getPropertyValue("--bg").trim(),
   };
 }
@@ -203,6 +204,91 @@ function layout() {
 window.addEventListener("resize", layout);
 new ResizeObserver(layout).observe(stage);
 
+// --- defects ---
+
+// each end has a random profile of 8 points, one per 45° radar spoke, that
+// tapers inward to an apex on the axis: a pyramid inside the cylinder.
+// stored as fractions of the end radius and of the allowed depth, so the
+// sliders rescale the defects instead of re-rolling them
+const defectSpokes = 8;
+const maxDefectDepth = 4; // feet
+const radarRadius = 80; // outer ring of the radar charts in index.html
+
+function randomDefect() {
+  return {
+    // squared to pull points toward the center, capped at half the radius
+    profile: Array.from(
+      { length: defectSpokes },
+      () => 0.1 + 0.4 * Math.random() ** 2,
+    ),
+    // Math.random() < 1, so the depth stays below the allowed maximum
+    depth: 0.2 + 0.8 * Math.random(),
+  };
+}
+
+const bottomDefect = randomDefect();
+const topDefect = randomDefect();
+
+function spokeAngle(i) {
+  return (i / defectSpokes) * Math.PI * 2;
+}
+
+function drawRadarChart(polygon, defect) {
+  const points = defect.profile.map((fraction, i) => {
+    const r = radarRadius * fraction;
+    const angle = spokeAngle(i);
+    return `${(r * Math.cos(angle)).toFixed(1)},${(r * Math.sin(angle)).toFixed(1)}`;
+  });
+  polygon.setAttribute("points", points.join(" "));
+}
+
+drawRadarChart(document.getElementById("bottomProfile"), bottomDefect);
+drawRadarChart(document.getElementById("topProfile"), topDefect);
+
+// pyramid with its base on the end face at faceY and its apex on the axis,
+// direction (+1 / -1) pointing into the cylinder
+function createDefectGeometry(defect, radius, faceY, direction) {
+  // at most half the length, so the two pyramids never overlap
+  const depth = defect.depth * Math.min(maxDefectDepth, height / 2);
+  const apex = new THREE.Vector3(0, faceY + direction * depth, 0);
+  const center = new THREE.Vector3(0, faceY, 0);
+  const base = defect.profile.map((fraction, i) => {
+    const angle = spokeAngle(i);
+    return new THREE.Vector3(
+      radius * fraction * Math.cos(angle),
+      faceY,
+      radius * fraction * Math.sin(angle),
+    );
+  });
+
+  const vertices = [];
+  base.forEach((point, i) => {
+    const next = base[(i + 1) % base.length];
+    vertices.push(apex, point, next); // side
+    vertices.push(center, next, point); // base
+  });
+  return new THREE.BufferGeometry().setFromPoints(vertices);
+}
+
+function addDefect(defect, radius, faceY, direction) {
+  const geometry = createDefectGeometry(defect, radius, faceY, direction);
+
+  // opaque, so it renders before the translucent cylinder and shows through it
+  const material = new THREE.MeshBasicMaterial({
+    color: themeColors.defect.clone().multiplyScalar(0.55),
+    side: THREE.DoubleSide,
+  });
+  cylinderGroup.add(new THREE.Mesh(geometry, material));
+
+  // edges make the pyramid's faces readable on the flat-shaded mesh
+  const edgeMaterial = new THREE.LineBasicMaterial({
+    color: themeColors.defect,
+  });
+  cylinderGroup.add(
+    new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edgeMaterial),
+  );
+}
+
 function createCylinder() {
   // free GPU resources of the previous parts before rebuilding
   for (const part of cylinderGroup.children) {
@@ -279,6 +365,9 @@ function createCylinder() {
     bottomCircleMaterial,
   );
   cylinderGroup.add(bottomCircle);
+
+  addDefect(bottomDefect, radiusBottom, -height / 2, 1);
+  addDefect(topDefect, radiusTop, height / 2, -1);
 
   outlinePass.selectedObjects = [cylinder];
 }

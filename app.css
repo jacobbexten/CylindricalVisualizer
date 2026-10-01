@@ -1,6 +1,6 @@
 /* ---------- theme ----------
    Every color comes from these variables. main.js reads --accent,
-   --accent-strong and --star for the three.js scene, so changing a theme
+   --accent-strong, --star and --defect for the three.js scene, so changing a theme
    here changes the 3D view too. Channel variables (*-rgb) allow alpha
    variants: rgb(var(--accent-rgb) / 0.4). */
 
@@ -10,6 +10,8 @@
   --accent-rgb: 105 180 204;
   --accent-strong: #9fe3f5;
   --star: #e6f4ff;
+  --defect: #ff6b8a;
+  --defect-rgb: 255 107 138;
   --bg: #070b1a;
   --nebula-1: 31 78 121; /* rgb channels */
   --nebula-2: 52 38 110;
@@ -22,6 +24,8 @@
   --accent-rgb: 180 140 255;
   --accent-strong: #dcc8ff;
   --star: #f3eaff;
+  --defect: #ffb454;
+  --defect-rgb: 255 180 84;
   --bg: #0b0716;
   --nebula-1: 96 40 140;
   --nebula-2: 160 40 110;
@@ -34,6 +38,8 @@
   --accent-rgb: 242 166 90;
   --accent-strong: #ffd29e;
   --star: #fff3e0;
+  --defect: #ff4f6d;
+  --defect-rgb: 255 79 109;
   --bg: #0f0a08;
   --nebula-1: 140 60 30;
   --nebula-2: 110 30 60;
@@ -535,10 +541,10 @@ canvas {
 }
 
 .radar-chart .data-polygon {
-  fill: rgb(var(--accent-rgb) / 0.35);
-  stroke: var(--accent-strong);
+  fill: rgb(var(--defect-rgb) / 0.35);
+  stroke: var(--defect);
   stroke-width: 1.5;
-  filter: drop-shadow(0 0 6px rgb(var(--accent-rgb) / 0.6));
+  filter: drop-shadow(0 0 6px rgb(var(--defect-rgb) / 0.6));
 }
 
 /* stacked layout: tighter panel so the 3D view keeps most of the screen */
