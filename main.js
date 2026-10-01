@@ -414,18 +414,11 @@ function addFlaw(flaw, radius, faceY, direction) {
   }
 }
 
-function createCageGeometry(cylinderGeometry) {
-  // a 30° threshold keeps only the rims (sides meet the caps at 90°,
-  // neighboring side faces at 360° / radialSegments)
-  const rims = new THREE.EdgesGeometry(cylinderGeometry, 30);
+// lengthwise lines of the cage, at the same angles as CylinderGeometry's
+// vertices so they meet the rims (one per radial segment would be a dense
+// wall of dashes)
+function createCageLinesGeometry() {
   const points = [];
-  const position = rims.getAttribute("position");
-  for (let i = 0; i < position.count; i++) {
-    points.push(new THREE.Vector3().fromBufferAttribute(position, i));
-  }
-  rims.dispose();
-
-  // same angles as CylinderGeometry's vertices, so the lines meet the rims
   for (let i = 0; i < cageLines; i++) {
     const angle = (i / cageLines) * Math.PI * 2;
     const sin = Math.sin(angle);
@@ -462,23 +455,34 @@ function createCylinder() {
   const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
   cylinderGroup.add(cylinder);
 
-  // dashed cage: the smooth rims plus a few lengthwise lines (one per
-  // radial segment would be a dense wall of dashes)
-  const edges = createCageGeometry(cylinderGeometry);
-
-  // create dashed line material
-  const dashedMaterial = new THREE.LineDashedMaterial({
+  // cage around the cylinder: dashed lengthwise lines, solid rims
+  const cageMaterial = {
     color: themeColors.accentStrong,
-    dashSize: 0.25,
-    gapSize: 0.25,
     transparent: true,
     opacity: 0.5,
-  });
+  };
 
-  const edgeCylinder = new THREE.LineSegments(edges, dashedMaterial);
+  const edgeCylinder = new THREE.LineSegments(
+    createCageLinesGeometry(),
+    new THREE.LineDashedMaterial({
+      ...cageMaterial,
+      dashSize: 0.25,
+      gapSize: 0.25,
+    }),
+  );
   edgeCylinder.computeLineDistances(); // required for dashes to render
-  edgeCylinder.scale.set(1.2, 1, 1.2);
-  cylinderGroup.add(edgeCylinder);
+
+  // a 30° threshold keeps only the rims (sides meet the caps at 90°,
+  // neighboring side faces at 360° / radialSegments)
+  const cageRims = new THREE.LineSegments(
+    new THREE.EdgesGeometry(cylinderGeometry, 30),
+    new THREE.LineBasicMaterial(cageMaterial),
+  );
+
+  for (const part of [edgeCylinder, cageRims]) {
+    part.scale.set(1.2, 1, 1.2);
+    cylinderGroup.add(part);
+  }
 
   // add top end
   const topCircleGeometry = new THREE.CircleGeometry(radiusTop, radialSegments);
