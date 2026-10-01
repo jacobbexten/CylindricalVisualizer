@@ -69,11 +69,20 @@ const framingScale =
 camera.position.set(5, Math.PI, Math.PI * 2).multiplyScalar(framingScale);
 controls.update();
 
-// create cylinder geometry to represent segment
-var radiusTop = 0.7;
-var radiusBottom = 0.8;
-var height = 8;
-var radialSegments = 20;
+// sliders give diameters in inches and length in feet; the scene works in feet
+const bottomDiameterSlider = document.getElementById("bottomDiameterSlider");
+const topDiameterSlider = document.getElementById("topDiameterSlider");
+const lengthSlider = document.getElementById("lengthSlider");
+
+function diameterToRadius(inches) {
+  return inches / 2 / 12;
+}
+
+// create cylinder geometry to represent segment, starting from the slider defaults
+let radiusTop = diameterToRadius(parseFloat(topDiameterSlider.value));
+let radiusBottom = diameterToRadius(parseFloat(bottomDiameterSlider.value));
+let height = parseFloat(lengthSlider.value);
+const radialSegments = 20;
 
 // all cylinder parts live in one group so they rotate together
 const cylinderGroup = new THREE.Group();
@@ -187,27 +196,23 @@ function animate() {
   composer.render();
 }
 
-// sliders
-const radiusBottomSlider = document.getElementById("radiusBottomSlider");
-const radiusTopSlider = document.getElementById("radiusTopSlider");
-const lengthSlider = document.getElementById("lengthSlider");
-
+// slider labels
 const bottomLabel = document.getElementById("bottomValue");
 const topLabel = document.getElementById("topValue");
 const lengthLabel = document.getElementById("lengthValue");
 
 updateLabels();
 
-// an event listener to change the radius of the bottom end
-radiusBottomSlider.addEventListener("input", (event) => {
-  radiusBottom = parseFloat(event.target.value);
+// an event listener to change the diameter of the bottom end
+bottomDiameterSlider.addEventListener("input", (event) => {
+  radiusBottom = diameterToRadius(parseFloat(event.target.value));
   updateLabels();
   createCylinder();
 });
 
-// an event listener to change the radius of the top end
-radiusTopSlider.addEventListener("input", (event) => {
-  radiusTop = parseFloat(event.target.value);
+// an event listener to change the diameter of the top end
+topDiameterSlider.addEventListener("input", (event) => {
+  radiusTop = diameterToRadius(parseFloat(event.target.value));
   updateLabels();
   createCylinder();
 });
@@ -220,7 +225,7 @@ lengthSlider.addEventListener("input", (event) => {
 });
 
 function updateLabels() {
-  bottomLabel.textContent = Math.round(radiusBottom * 12 * 2);
-  topLabel.textContent = Math.round(radiusTop * 12 * 2);
+  bottomLabel.textContent = bottomDiameterSlider.value;
+  topLabel.textContent = topDiameterSlider.value;
   lengthLabel.textContent = height;
 }
