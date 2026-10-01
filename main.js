@@ -4,16 +4,23 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 
+// the canvas fills half the window in each dimension
+function viewportSize() {
+  return { width: window.innerWidth * 0.5, height: window.innerHeight * 0.5 };
+}
+
+const initialSize = viewportSize();
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
   100,
-  window.innerWidth / window.innerHeight,
+  initialSize.width / initialSize.height,
   0.1,
   1000
 );
 
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth * 0.5, window.innerHeight * 0.5);
+renderer.setSize(initialSize.width, initialSize.height);
 renderer.setClearColor(0x0f172a, 0.5);
 renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
@@ -80,13 +87,21 @@ const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
 const outlinePass = new OutlinePass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  new THREE.Vector2(initialSize.width, initialSize.height),
   scene,
   camera
 );
 outlinePass.visibleEdgeColor.set("#69b4cc");
 outlinePass.hiddenEdgeColor.set("#69b4cc");
 composer.addPass(outlinePass);
+
+window.addEventListener("resize", () => {
+  const size = viewportSize();
+  camera.aspect = size.width / size.height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(size.width, size.height);
+  composer.setSize(size.width, size.height);
+});
 
 function createCylinder() {
   // free GPU resources of the previous parts before rebuilding
