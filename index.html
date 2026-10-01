@@ -63,9 +63,60 @@
       <!-- empty area the cylinder is centered in; the canvas behind shows through -->
       <main class="stage" aria-label="3D view"></main>
 
+      <!-- volume readout, printed by volumeConsole.js: docked across the
+           bottom on desktop, a pop-up on phones -->
+      <section
+        id="volumeConsole"
+        class="glass console"
+        aria-labelledby="console-title"
+      >
+        <div class="console-bar">
+          <span class="console-lights" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <h2 id="console-title" class="console-title">
+            volumetrics://segment
+          </h2>
+          <!-- desktop only: replaces the panel's Calculate volume button there -->
+          <button
+            type="button"
+            id="consoleRun"
+            class="console-run"
+            aria-label="Calculate volume"
+          >
+            <span aria-hidden="true">▶</span> run
+          </button>
+          <button
+            type="button"
+            id="consoleClose"
+            class="console-close"
+            aria-label="Close volume console"
+          >
+            ×
+          </button>
+        </div>
+        <div class="console-screen">
+          <!-- the typed output is visual only; consoleStatus announces the result -->
+          <div
+            id="consoleOutput"
+            class="console-output"
+            aria-hidden="true"
+          ></div>
+          <div class="console-static" aria-hidden="true"></div>
+        </div>
+        <p id="consoleStatus" class="visually-hidden" role="status"></p>
+      </section>
+      <div id="consoleBackdrop" class="console-backdrop"></div>
+
       <aside class="glass panel">
         <section class="panel-section" aria-labelledby="dimensions-heading">
-          <h2 id="dimensions-heading" class="section-heading">Dimensions</h2>
+          <div class="section-header">
+            <h2 id="dimensions-heading" class="section-heading">Dimensions</h2>
+            <span id="frustumLight" class="frustum-light" aria-hidden="true">
+              <span class="frustum-dot"></span>Frustum detected
+            </span>
+          </div>
+          <p id="frustumStatus" class="visually-hidden" role="status"></p>
           <div class="control">
             <div class="control-header">
               <label class="control-label" for="bottomDiameterSlider"
@@ -128,10 +179,10 @@
           <button
             type="button"
             id="detectFlawsButton"
-            class="detect-button"
+            class="action-button"
             aria-pressed="false"
           >
-            <span class="detect-indicator" aria-hidden="true"></span>
+            <span class="action-indicator" aria-hidden="true"></span>
             Detect flaws
           </button>
           <div class="end-vis-row">
@@ -150,6 +201,23 @@
               <svg id="topRadar" class="radar-chart" aria-hidden="true"></svg>
             </figure>
           </div>
+        </section>
+
+        <!-- phones only: on desktop the docked console's run button replaces it -->
+        <section
+          class="panel-section volume-section"
+          aria-labelledby="volume-heading"
+        >
+          <h2 id="volume-heading" class="section-heading">Volume</h2>
+          <button
+            type="button"
+            id="calculateVolumeButton"
+            class="action-button accent"
+            aria-controls="volumeConsole"
+          >
+            <span class="action-indicator" aria-hidden="true"></span>
+            Calculate volume
+          </button>
         </section>
       </aside>
     </div>

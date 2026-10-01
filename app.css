@@ -57,6 +57,7 @@
   --tap: 44px; /* minimum touch target */
   --font:
     "Space Grotesk Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -559,9 +560,12 @@ canvas {
   transform: scale(1);
 }
 
-/* ---------- flaw detection toggle ---------- */
+/* ---------- action buttons (Detect flaws, Calculate volume) ---------- */
 
-.detect-button {
+/* --tone is the button's color: flaw by default, accent with .accent */
+.action-button {
+  --tone: var(--flaw);
+  --tone-rgb: var(--flaw-rgb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -573,8 +577,8 @@ canvas {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text);
-  background: rgb(var(--flaw-rgb) / 0.08);
-  border: 1px solid rgb(var(--flaw-rgb) / 0.35);
+  background: rgb(var(--tone-rgb) / 0.08);
+  border: 1px solid rgb(var(--tone-rgb) / 0.35);
   border-radius: 12px;
   cursor: pointer;
   transition:
@@ -583,43 +587,503 @@ canvas {
     box-shadow 0.2s ease;
 }
 
-.detect-button:hover {
-  background: rgb(var(--flaw-rgb) / 0.16);
-  border-color: rgb(var(--flaw-rgb) / 0.6);
+.action-button.accent {
+  --tone: var(--accent-strong);
+  --tone-rgb: var(--accent-rgb);
 }
 
-.detect-button:focus-visible {
-  outline: 2px solid var(--flaw);
+.action-button:hover {
+  background: rgb(var(--tone-rgb) / 0.16);
+  border-color: rgb(var(--tone-rgb) / 0.6);
+}
+
+.action-button:focus-visible {
+  outline: 2px solid var(--tone);
   outline-offset: 2px;
 }
 
-.detect-button[aria-pressed="true"] {
-  background: rgb(var(--flaw-rgb) / 0.2);
-  border-color: var(--flaw);
+/* on (Detect flaws) or busy (console printing) */
+.action-button[aria-pressed="true"],
+.action-button[data-state="printing"],
+.action-button[data-state="aborting"] {
+  background: rgb(var(--tone-rgb) / 0.2);
+  border-color: var(--tone);
   /* inset, so the glow doesn't spill onto the end profiles around it */
-  box-shadow: inset 0 0 14px rgb(var(--flaw-rgb) / 0.35);
+  box-shadow: inset 0 0 14px rgb(var(--tone-rgb) / 0.35);
 }
 
-.detect-indicator {
+.action-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgb(var(--flaw-rgb) / 0.35);
+  background: rgb(var(--tone-rgb) / 0.35);
   transition:
     background 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.detect-button[aria-pressed="true"] .detect-indicator {
-  background: var(--flaw);
-  box-shadow: 0 0 10px var(--flaw);
-  animation: detect-pulse 1.4s ease-in-out infinite;
+.action-button[aria-pressed="true"] .action-indicator,
+.action-button[data-state="printing"] .action-indicator,
+.action-button[data-state="aborting"] .action-indicator {
+  background: var(--tone);
+  box-shadow: 0 0 10px var(--tone);
+  animation: action-pulse 1.4s ease-in-out infinite;
 }
 
-@keyframes detect-pulse {
+@keyframes action-pulse {
   50% {
-    box-shadow: 0 0 2px var(--flaw);
+    box-shadow: 0 0 2px var(--tone);
   }
+}
+
+/* ---------- frustum warning light ---------- */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.frustum-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--flaw);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+}
+
+.frustum-light.active {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s;
+  animation: frustum-text 1.6s ease-in-out infinite;
+}
+
+.frustum-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--flaw);
+  box-shadow: 0 0 8px rgb(var(--flaw-rgb) / 0.9);
+}
+
+.frustum-light.active .frustum-dot {
+  animation: frustum-dot 1.6s ease-in-out infinite;
+}
+
+/* a gentle pulse, never a hard blink */
+@keyframes frustum-dot {
+  50% {
+    background: rgb(var(--flaw-rgb) / 0.45);
+    box-shadow: 0 0 2px rgb(var(--flaw-rgb) / 0.4);
+  }
+}
+
+@keyframes frustum-text {
+  50% {
+    color: rgb(var(--flaw-rgb) / 0.7);
+  }
+}
+
+/* ---------- volume console ---------- */
+
+/* phones (default): a centered pop-up over a dimmed backdrop, shown while
+   .open; desktop docks it across the bottom (see below) */
+.console {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  margin: auto;
+  width: min(calc(100vw - 24px), 460px);
+  height: fit-content;
+  max-height: min(80dvh, 560px);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  /* solid as a pop-up, so the panel underneath doesn't show through */
+  background:
+    linear-gradient(rgb(var(--accent-rgb) / 0.06), rgb(0 0 0 / 0.25)), var(--bg);
+  border-color: rgb(var(--accent-rgb) / 0.3);
+  box-shadow:
+    0 10px 40px rgb(0 0 0 / 0.45),
+    0 0 24px rgb(var(--accent-rgb) / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+  animation: console-open 0.35s ease-out;
+}
+
+.console.open {
+  display: flex;
+}
+
+.console-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: none;
+  pointer-events: auto;
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.console.open + .console-backdrop {
+  display: block;
+}
+
+@keyframes console-open {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scaleY(0.96);
+  }
+}
+
+.console-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 4px 14px;
+  border-bottom: 1px solid rgb(var(--accent-rgb) / 0.18);
+  background: rgb(var(--accent-rgb) / 0.06);
+}
+
+.console-lights {
+  display: flex;
+  gap: 5px;
+}
+
+.console-lights span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--accent-rgb) / 0.35);
+}
+
+.console-lights span:first-child {
+  background: var(--accent-strong);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.console[data-state="aborting"] .console-lights span:first-child,
+.console[data-state="lost"] .console-lights span:first-child {
+  background: var(--flaw);
+  box-shadow: 0 0 6px var(--flaw);
+}
+
+.console-title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* desktop only (shown in the docked query below) */
+.console-run {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  margin: 4px 6px 4px 0;
+  padding: 0 12px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+  background: rgb(var(--accent-rgb) / 0.1);
+  border: 1px solid rgb(var(--accent-rgb) / 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.console-run span {
+  font-size: 0.6rem;
+}
+
+.console-run:hover {
+  background: rgb(var(--accent-rgb) / 0.2);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.35);
+}
+
+.console-run:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.console-run[data-state="printing"],
+.console-run[data-state="aborting"] {
+  background: rgb(var(--accent-rgb) / 0.2);
+  border-color: var(--accent-strong);
+  box-shadow: inset 0 0 10px rgb(var(--accent-rgb) / 0.35);
+}
+
+.console-close {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.console-close:hover {
+  color: var(--text);
+  background: rgb(255 255 255 / 0.08);
+}
+
+.console-close:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: -2px;
+}
+
+.console-screen {
+  position: relative;
+  display: flex;
+  min-height: 0;
+}
+
+/* faint CRT scanlines over the text */
+.console-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.025) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.console-output {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 14px 12px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  white-space: pre;
+  color: var(--text);
+  text-shadow: 0 0 6px rgb(var(--accent-rgb) / 0.45);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-rgb) / 0.4) transparent;
+  transition:
+    opacity 1.4s ease,
+    filter 1.4s ease;
+}
+
+.console-line {
+  min-height: 1.55em;
+}
+
+.console-output .c-prompt,
+.console-output .c-command {
+  color: var(--accent-strong);
+}
+
+.console-output .c-label,
+.console-output .c-dim {
+  color: var(--text-muted);
+}
+
+.console-output .c-ok {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.console-output .c-flaw,
+.console-output .c-flaw .c-label {
+  color: var(--flaw);
+  text-shadow: 0 0 6px rgb(var(--flaw-rgb) / 0.5);
+}
+
+.console-output .c-strong {
+  font-weight: 700;
+}
+
+.console-output .c-net {
+  font-weight: 700;
+  color: var(--accent-strong);
+  text-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.85);
+}
+
+.console-output .c-net .c-label {
+  color: var(--accent-strong);
+}
+
+.console-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--accent-strong);
+  box-shadow: 0 0 6px var(--accent);
+  animation: console-blink 1s steps(1) infinite;
+}
+
+@keyframes console-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* signal lost: the readout dims under flickering static */
+.console-static {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+  transition: opacity 1.4s ease;
+}
+
+/* jittering scanlines on top of the noise */
+.console-static::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(var(--flaw-rgb) / 0.12) 0 2px,
+    transparent 2px 5px
+  );
+}
+
+.console[data-state="lost"] .console-output {
+  opacity: 0.3;
+  filter: blur(0.4px) saturate(0.4);
+}
+
+.console[data-state="lost"] .console-static {
+  opacity: 0.2;
+  animation: console-static 0.5s steps(1) infinite;
+}
+
+.console[data-state="lost"] .console-static::after {
+  animation: console-jitter 0.9s steps(1) infinite;
+}
+
+@keyframes console-static {
+  0% {
+    background-position: 0 0;
+  }
+  20% {
+    background-position: -43px 61px;
+  }
+  40% {
+    background-position: 87px -29px;
+  }
+  60% {
+    background-position: -112px -74px;
+  }
+  80% {
+    background-position: 35px 118px;
+  }
+}
+
+@keyframes console-jitter {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(2px);
+  }
+  55% {
+    transform: translateY(-1px);
+    opacity: 0.6;
+  }
+  80% {
+    transform: translateY(3px);
+  }
+}
+
+/* desktop: always shown, docked across the bottom of the window. Keep the
+   query in sync with `docked` in main.js; landscape phones keep the pop-up */
+@media (min-width: 900px) and (min-height: 541px) {
+  .app {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "header header"
+      "stage panel"
+      "console console";
+  }
+
+  .console {
+    grid-area: console;
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    margin: 0;
+    width: auto;
+    height: auto;
+    max-height: none;
+    display: flex;
+    animation: none;
+    background:
+      linear-gradient(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.55)), var(--glass-bg);
+  }
+
+  .console-output {
+    height: clamp(120px, 22vh, 200px);
+  }
+
+  .console-close,
+  .console.open + .console-backdrop {
+    display: none;
+  }
+
+  .console-run {
+    display: inline-flex;
+  }
+
+  /* the run button above replaces the panel's Calculate volume button */
+  .volume-section {
+    display: none;
+  }
+}
+
+/* ---------- utilities ---------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* stacked layout: tighter panel so the 3D view keeps most of the screen */
