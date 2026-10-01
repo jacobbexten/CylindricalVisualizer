@@ -1065,6 +1065,11 @@ canvas {
   .console-run {
     display: inline-flex;
   }
+
+  /* the run button above replaces the panel's Calculate volume button */
+  .volume-section {
+    display: none;
+  }
 }
 
 /* ---------- utilities ---------- */

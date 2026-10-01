@@ -77,7 +77,7 @@
           <h2 id="console-title" class="console-title">
             volumetrics://segment
           </h2>
-          <!-- desktop only: the panel button can be below the fold there -->
+          <!-- desktop only: replaces the panel's Calculate volume button there -->
           <button
             type="button"
             id="consoleRun"
@@ -203,7 +203,11 @@
           </div>
         </section>
 
-        <section class="panel-section" aria-labelledby="volume-heading">
+        <!-- phones only: on desktop the docked console's run button replaces it -->
+        <section
+          class="panel-section volume-section"
+          aria-labelledby="volume-heading"
+        >
           <h2 id="volume-heading" class="section-heading">Volume</h2>
           <button
             type="button"
