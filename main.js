@@ -254,10 +254,13 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 // flaws start hidden; "Detect flaws" sweeps a scanner ring from the bottom
 // end to the top, revealing the flaws behind it (and back again to hide).
-// scanProgress runs 0..1 along the length toward scanTarget
+// scanProgress runs 0..1 in time toward scanTarget; the ring's position
+// along the length is that eased, so the sweep starts and stops gently
 let scanProgress = 0;
 let scanTarget = 0;
-const scanDuration = 1.8; // seconds for a full sweep
+let scannerFade = 0; // 0..1 ring opacity, eased so it never pops in or out
+const scanDuration = 2.4; // seconds for a full sweep
+const scannerFadeDuration = 0.35; // seconds
 const scanMargin = 0.05; // feet past each end, so 0 / 1 clip everything / nothing
 const scanClock = new THREE.Clock();
 
@@ -268,23 +271,35 @@ const flawClipPlane = new THREE.Plane();
 let flawParts = [];
 let scannerParts = [];
 
+function scanPosition() {
+  return THREE.MathUtils.smootherstep(scanProgress, 0, 1);
+}
+
 function scanY() {
   return THREE.MathUtils.lerp(
     -height / 2 - scanMargin,
     height / 2 + scanMargin,
-    scanProgress,
+    scanPosition(),
   );
 }
 
 function updateScan(delta) {
+  const scanning = scanProgress !== scanTarget;
   if (reducedMotion.matches) {
     scanProgress = scanTarget;
+    scannerFade = 0;
   } else {
     const step = delta / scanDuration;
     scanProgress += THREE.MathUtils.clamp(
       scanTarget - scanProgress,
       -step,
       step,
+    );
+    const fadeStep = delta / scannerFadeDuration;
+    scannerFade += THREE.MathUtils.clamp(
+      (scanning ? 1 : 0) - scannerFade,
+      -fadeStep,
+      fadeStep,
     );
   }
 
@@ -294,19 +309,22 @@ function updateScan(delta) {
   flawClipPlane.copy(flawClipLocal).applyMatrix4(cylinderGroup.matrixWorld);
   for (const part of flawParts) part.visible = scanProgress > 0;
 
-  // the ring follows the taper, just outside the dashed edges
-  const scanning = scanProgress !== scanTarget;
+  // the ring follows the taper, just outside the dashed edges, and also
+  // fades toward the ends so it doesn't appear on or vanish off a cap
   const t = THREE.MathUtils.clamp((y + height / 2) / height, 0, 1);
   const radius = THREE.MathUtils.lerp(radiusBottom, radiusTop, t) * 1.25;
+  const edgeFade = Math.min(1, 3 * Math.sin(Math.PI * scanPosition()));
+  const opacity = scannerFade * edgeFade;
   for (const part of scannerParts) {
-    part.visible = scanning;
+    part.visible = opacity > 0;
+    part.material.opacity = part.userData.opacity * opacity;
     part.position.y = y;
     part.scale.set(radius, 1, radius);
   }
 
   // each radar profile appears once the scan has passed its flaw's base
-  bottomProfile.classList.toggle("revealed", scanProgress > 0.02);
-  topProfile.classList.toggle("revealed", scanProgress > 0.98);
+  bottomProfile.classList.toggle("revealed", scanPosition() > 0.02);
+  topProfile.classList.toggle("revealed", scanPosition() > 0.98);
 }
 
 function addScanner() {
@@ -330,7 +348,10 @@ function addScanner() {
     new THREE.Mesh(ringGeometry, glow(0.95)),
     new THREE.Mesh(discGeometry, glow(0.18)),
   ];
-  for (const part of scannerParts) cylinderGroup.add(part);
+  for (const part of scannerParts) {
+    part.userData.opacity = part.material.opacity; // full-strength opacity
+    cylinderGroup.add(part);
+  }
 }
 
 // pyramid with its base on the end face at faceY and its apex on the axis,
