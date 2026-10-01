@@ -4,6 +4,8 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { flawDepth, flawVolume, frustumVolume } from "./volume.js";
+import { createVolumeConsole } from "./volumeConsole.js";
 
 // the canvas fills the whole window behind the UI; the cylinder is centered
 // in the .stage element (the area not covered by panels)
@@ -213,7 +215,6 @@ new ResizeObserver(layout).observe(stage);
 // stored as fractions of the end radius and of the allowed depth, so the
 // sliders rescale the flaws instead of re-rolling them
 const flawSpokes = 8;
-const maxFlawDepth = 4; // feet
 const radarRadius = 80; // outer ring of the radar charts, in SVG units
 const radarRings = 4;
 const flawFaceOffset = 0.01; // feet
@@ -401,8 +402,7 @@ function addScanner() {
 // pyramid with its base on the end face at faceY and its apex on the axis,
 // direction (+1 / -1) pointing into the cylinder
 function createFlawGeometry(flaw, radius, faceY, direction) {
-  // at most half the length, so the two pyramids never overlap
-  const depth = flaw.depth * Math.min(maxFlawDepth, height / 2);
+  const depth = flawDepth(flaw, height);
   const apex = new THREE.Vector3(0, faceY + direction * depth, 0);
   // the base sits just proud of the end cap; coplanar faces z-fight
   const baseY = faceY - direction * flawFaceOffset;
@@ -631,6 +631,60 @@ detectFlawsButton.addEventListener("click", () => {
   detectFlawsButton.setAttribute("aria-pressed", String(scanTarget === 1));
 });
 
+// --- frustum warning light ---
+
+// lit whenever the ends differ, i.e. the segment is a frustum, not a cylinder
+const frustumLight = document.getElementById("frustumLight");
+const frustumStatus = document.getElementById("frustumStatus");
+
+function updateFrustumLight() {
+  const frustum = bottomDiameterSlider.value !== topDiameterSlider.value;
+  if (frustumLight.classList.contains("active") === frustum) return;
+  frustumLight.classList.toggle("active", frustum);
+  // announced once when it appears, not on every pulse
+  frustumStatus.textContent = frustum
+    ? "Frustum detected: the bottom and top diameters differ."
+    : "";
+}
+
+updateFrustumLight();
+
+// --- volume console ---
+
+function currentDimensions() {
+  return {
+    bottom: parseFloat(bottomDiameterSlider.value),
+    top: parseFloat(topDiameterSlider.value),
+    length: height,
+  };
+}
+
+// gross (frustum) volume minus both flaws, in cubic feet
+function volumeReadout() {
+  const gross = frustumVolume(radiusBottom, radiusTop, height);
+  const bottom = flawVolume(bottomFlaw, radiusBottom, height);
+  const top = flawVolume(topFlaw, radiusTop, height);
+  return {
+    dimensions: currentDimensions(),
+    gross,
+    bottomFlaw: bottom,
+    topFlaw: top,
+    net: gross - bottom - top,
+    flawsDetected: scanTarget === 1,
+  };
+}
+
+const volumeConsole = createVolumeConsole({
+  root: document.getElementById("volumeConsole"),
+  output: document.getElementById("consoleOutput"),
+  status: document.getElementById("consoleStatus"),
+  button: document.getElementById("calculateVolumeButton"),
+  closeButton: document.getElementById("consoleClose"),
+  readout: volumeReadout,
+  dimensions: currentDimensions,
+  reducedMotion,
+});
+
 // --- sliders ---
 
 // slider labels
@@ -656,7 +710,9 @@ function updateDiameters(changedSlider) {
   radiusBottom = diameterToRadius(parseFloat(bottomDiameterSlider.value));
   radiusTop = diameterToRadius(parseFloat(topDiameterSlider.value));
   updateLabels();
+  updateFrustumLight();
   createCylinder();
+  volumeConsole.dimensionsChanged();
 }
 
 // event listeners to change the diameters of the ends
@@ -672,6 +728,7 @@ lengthSlider.addEventListener("input", (event) => {
   height = parseFloat(event.target.value);
   updateLabels();
   createCylinder();
+  volumeConsole.dimensionsChanged();
 });
 
 // filled part of a slider's track (WebKit has no ::range-progress)
