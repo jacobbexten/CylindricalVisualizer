@@ -213,6 +213,7 @@ new ResizeObserver(layout).observe(stage);
 const defectSpokes = 8;
 const maxDefectDepth = 4; // feet
 const radarRadius = 80; // outer ring of the radar charts in index.html
+const defectFaceOffset = 0.01; // feet
 
 function randomDefect() {
   return {
@@ -251,12 +252,14 @@ function createDefectGeometry(defect, radius, faceY, direction) {
   // at most half the length, so the two pyramids never overlap
   const depth = defect.depth * Math.min(maxDefectDepth, height / 2);
   const apex = new THREE.Vector3(0, faceY + direction * depth, 0);
-  const center = new THREE.Vector3(0, faceY, 0);
+  // the base sits just proud of the end cap; coplanar faces z-fight
+  const baseY = faceY - direction * defectFaceOffset;
+  const center = new THREE.Vector3(0, baseY, 0);
   const base = defect.profile.map((fraction, i) => {
     const angle = spokeAngle(i);
     return new THREE.Vector3(
       radius * fraction * Math.cos(angle),
-      faceY,
+      baseY,
       radius * fraction * Math.sin(angle),
     );
   });
@@ -273,12 +276,17 @@ function createDefectGeometry(defect, radius, faceY, direction) {
 function addDefect(defect, radius, faceY, direction) {
   const geometry = createDefectGeometry(defect, radius, faceY, direction);
 
-  // opaque, so it renders before the translucent cylinder and shows through it
   const material = new THREE.MeshBasicMaterial({
     color: themeColors.defect.clone().multiplyScalar(0.55),
     side: THREE.DoubleSide,
+    opacity: 0.75,
+    transparent: true,
   });
-  cylinderGroup.add(new THREE.Mesh(geometry, material));
+  const mesh = new THREE.Mesh(geometry, material);
+  // drawn before the translucent cylinder so it shows through it rather
+  // than being depth-tested away behind the cylinder's surface
+  mesh.renderOrder = -1;
+  cylinderGroup.add(mesh);
 
   // edges make the pyramid's faces readable on the flat-shaded mesh
   const edgeMaterial = new THREE.LineBasicMaterial({
