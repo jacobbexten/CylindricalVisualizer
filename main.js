@@ -33,7 +33,10 @@ starsGeometry.setAttribute(
   new THREE.BufferAttribute(starPositions, 3)
 );
 
-const starTexture = new THREE.TextureLoader().load("star.png");
+// resolved relative to this module so it works both raw and in Vite builds
+const starTexture = new THREE.TextureLoader().load(
+  new URL("./star.png", import.meta.url).href
+);
 
 const starsMaterial = new THREE.PointsMaterial({
   color: 0xffffff,
