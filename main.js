@@ -61,10 +61,10 @@ var radiusBottom = 0.8;
 var height = 8;
 var radialSegments = 20;
 
-let cylinder;
-let edgeCylinder;
-let topCircle;
-let bottomCircle;
+// all cylinder parts live in one group so they rotate together
+const cylinderGroup = new THREE.Group();
+cylinderGroup.rotation.z = Math.PI / 2;
+scene.add(cylinderGroup);
 
 // Add lighting
 const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -86,19 +86,7 @@ outlinePass.hiddenEdgeColor.set("#69b4cc");
 composer.addPass(outlinePass);
 
 function createCylinder() {
-  let currentRotation = { x: 0, y: 0, z: 0 };
-
-  if (cylinder) {
-    currentRotation.x = cylinder.rotation.x;
-    currentRotation.y = cylinder.rotation.y;
-    currentRotation.z = cylinder.rotation.z;
-
-    scene.remove(cylinder);
-    scene.remove(edgeCylinder);
-    scene.remove(topCircle);
-    scene.remove(bottomCircle);
-    outlinePass.selectedObjects = [];
-  }
+  cylinderGroup.clear();
 
   const cylinderGeometry = new THREE.CylinderGeometry(
     radiusTop,
@@ -113,14 +101,8 @@ function createCylinder() {
     transparent: true,
   });
 
-  cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-  scene.add(cylinder);
-
-  cylinder.rotation.set(
-    currentRotation.x,
-    currentRotation.y,
-    currentRotation.z
-  );
+  const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+  cylinderGroup.add(cylinder);
 
   // create edges of cylinder
   const edges = new THREE.EdgesGeometry(cylinderGeometry);
@@ -135,16 +117,9 @@ function createCylinder() {
     opacity: 0.5,
   });
 
-  edgeCylinder = new THREE.LineSegments(edges, dashedMaterial);
+  const edgeCylinder = new THREE.LineSegments(edges, dashedMaterial);
   edgeCylinder.scale.set(1.2, 1, 1.2);
-
-  scene.add(edgeCylinder);
-
-  edgeCylinder.rotation.set(
-    currentRotation.x,
-    currentRotation.y,
-    currentRotation.z
-  );
+  cylinderGroup.add(edgeCylinder);
 
   // add top end
   const topCircleGeometry = new THREE.CircleGeometry(radiusTop, radialSegments);
@@ -158,14 +133,8 @@ function createCylinder() {
     transparent: true,
   });
 
-  topCircle = new THREE.Mesh(topCircleGeometry, topCircleMaterial);
-  scene.add(topCircle);
-
-  topCircle.rotation.set(
-    currentRotation.x,
-    currentRotation.y,
-    currentRotation.z
-  );
+  const topCircle = new THREE.Mesh(topCircleGeometry, topCircleMaterial);
+  cylinderGroup.add(topCircle);
 
   // add bottom end
   const bottomCircleGeometry = new THREE.CircleGeometry(
@@ -182,38 +151,16 @@ function createCylinder() {
     transparent: true,
   });
 
-  bottomCircle = new THREE.Mesh(bottomCircleGeometry, bottomCircleMaterial);
-  scene.add(bottomCircle);
-
-  bottomCircle.rotation.set(
-    currentRotation.x,
-    currentRotation.y,
-    currentRotation.z
-  );
+  const bottomCircle = new THREE.Mesh(bottomCircleGeometry, bottomCircleMaterial);
+  cylinderGroup.add(bottomCircle);
 
   outlinePass.selectedObjects = [cylinder];
-  cylinder.rotation.z = Math.PI / 2;
-  edgeCylinder.rotation.z = Math.PI / 2;
-  topCircle.rotation.z = Math.PI / 2;
-  bottomCircle.rotation.z = Math.PI / 2;
 }
 
 createCylinder();
 
 function animate() {
-  if (cylinder) {
-    cylinder.rotation.x += 0.005;
-    // cylinder.rotation.z += 0.001;
-
-    edgeCylinder.rotation.x += 0.005;
-    // edgeCylinder.rotation.z += 0.001;
-
-    topCircle.rotation.x += 0.005;
-    // topCircle.rotation.z += 0.001;
-
-    bottomCircle.rotation.x += 0.005;
-    // bottomCircle.rotation.z += 0.001;
-  }
+  cylinderGroup.rotation.x += 0.005;
   controls.update();
   composer.render();
 }
