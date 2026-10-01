@@ -699,19 +699,23 @@ canvas {
 
 /* ---------- volume console ---------- */
 
-/* sits over the bottom of the stage; the stage itself stays empty */
+/* phones (default): a centered pop-up over a dimmed backdrop, shown while
+   .open; desktop docks it across the bottom (see below) */
 .console {
-  grid-area: stage;
-  align-self: end;
-  justify-self: stretch;
-  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  margin: auto;
+  width: min(calc(100vw - 24px), 460px);
+  height: fit-content;
+  max-height: min(80dvh, 560px);
+  display: none;
   flex-direction: column;
-  min-height: 0;
-  max-height: 100%;
   overflow: hidden;
   border-radius: 16px;
+  /* solid as a pop-up, so the panel underneath doesn't show through */
   background:
-    linear-gradient(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.55)), var(--glass-bg);
+    linear-gradient(rgb(var(--accent-rgb) / 0.06), rgb(0 0 0 / 0.25)), var(--bg);
   border-color: rgb(var(--accent-rgb) / 0.3);
   box-shadow:
     0 10px 40px rgb(0 0 0 / 0.45),
@@ -720,8 +724,23 @@ canvas {
   animation: console-open 0.35s ease-out;
 }
 
-.console[hidden] {
+.console.open {
+  display: flex;
+}
+
+.console-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
   display: none;
+  pointer-events: auto;
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.console.open + .console-backdrop {
+  display: block;
 }
 
 @keyframes console-open {
@@ -820,7 +839,6 @@ canvas {
 .console-output {
   flex: 1;
   min-height: 0;
-  max-height: 248px;
   overflow: auto;
   padding: 10px 14px 12px;
   font-family: var(--mono);
@@ -964,11 +982,39 @@ canvas {
   }
 }
 
-/* wide: a terminal window in the bottom-left of the stage */
-@media (min-width: 900px) {
+/* desktop: always shown, docked across the bottom of the window. Keep the
+   query in sync with `docked` in main.js; landscape phones keep the pop-up */
+@media (min-width: 900px) and (min-height: 541px) {
+  .app {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "header header"
+      "stage panel"
+      "console console";
+  }
+
   .console {
-    justify-self: start;
-    width: min(100%, 540px);
+    grid-area: console;
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    margin: 0;
+    width: auto;
+    height: auto;
+    max-height: none;
+    display: flex;
+    animation: none;
+    background:
+      linear-gradient(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.55)), var(--glass-bg);
+  }
+
+  .console-output {
+    height: clamp(120px, 22vh, 200px);
+  }
+
+  .console-close,
+  .console.open + .console-backdrop {
+    display: none;
   }
 }
 

@@ -22,12 +22,14 @@ export function createVolumeConsole({
   status,
   button,
   closeButton,
+  backdrop,
+  docked,
   readout,
   dimensions,
   reducedMotion,
 }) {
-  // closed | printing | done | aborting | lost
-  let state = "closed";
+  // idle | printing | done | aborting | lost
+  let state = "idle";
   let token = { cancelled: true };
   let lastRun = null; // dimensions of the last calculation
 
@@ -351,8 +353,19 @@ export function createVolumeConsole({
     }
   }
 
+  // waiting for a command; what the docked console shows before a run
+  function standBy() {
+    output.replaceChildren();
+    line("c-dim").prepend("  volumetrics console · standing by");
+    span(line("c-command"), "c-prompt").textContent = "> ";
+  }
+
   async function calculateVolume() {
-    root.hidden = false;
+    // on phones it's a pop-up; move focus into it
+    if (!docked.matches && !root.classList.contains("open")) {
+      root.classList.add("open");
+      closeButton.focus();
+    }
     output.replaceChildren();
     status.textContent = "";
     if (await start("printing", calculate)) setState("done");
@@ -364,19 +377,28 @@ export function createVolumeConsole({
     if (await start("aborting", loseSignal)) setState("lost");
   }
 
+  // only the phone pop-up closes; the docked console is always shown
   function close() {
+    if (!root.classList.contains("open")) return;
     token.cancelled = true;
-    root.hidden = true;
-    setState("closed");
+    root.classList.remove("open");
+    setState("idle");
+    standBy();
     button.focus();
   }
 
   button.addEventListener("click", calculateVolume);
   closeButton.addEventListener("click", close);
-  root.addEventListener("keydown", (event) => {
+  backdrop.addEventListener("click", close);
+  document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") close();
   });
+  // the pop-up state means nothing once the console is docked
+  docked.addEventListener("change", () => {
+    if (docked.matches) root.classList.remove("open");
+  });
 
-  setState("closed");
+  setState("idle");
+  standBy();
   return { dimensionsChanged };
 }
